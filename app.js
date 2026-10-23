@@ -123,7 +123,7 @@ function switchDashTab(tabName) {
 }
 
 // ============================================================
-// DYNAMIC DROPDOWNS
+// DYNAMIC DROPDOWNS (SIGNUP)
 // ============================================================
 
 const courseData = {
@@ -312,7 +312,7 @@ async function generateWordDoc() {
 }
 
 // ============================================================
-// ANNOUNCEMENTS & PROFILE
+// ANNOUNCEMENTS & PROFILE (UPDATED)
 // ============================================================
 
 async function loadAnnouncement() {
@@ -324,7 +324,40 @@ async function loadAnnouncement() {
 }
 
 function showProfileModal() {
+  // 1. Fill existing data
+  document.getElementById('edit-lastname').value = currentStudent.lastName || '';
+  document.getElementById('edit-firstname').value = currentStudent.firstName || '';
+  document.getElementById('edit-middlename').value = currentStudent.middleName || '';
+  document.getElementById('edit-sex').value = currentStudent.sex || 'Male';
+  document.getElementById('edit-section').value = currentStudent.section || '';
   document.getElementById('edit-supervisor').value = currentStudent.supervisor || '';
+  
+  // 2. Set Field and trigger Course dropdown
+  const fieldSelect = document.getElementById('edit-field');
+  if (currentStudent.field) {
+    fieldSelect.value = currentStudent.field;
+  }
+  updateEditCourses();
+  
+  // 3. Set Course and trigger Area dropdown
+  const courseSelect = document.getElementById('edit-course');
+  if (currentStudent.course) {
+    courseSelect.value = currentStudent.course;
+  }
+  updateEditAreas();
+
+  // 4. Set Area and trigger School dropdown
+  const areaSelect = document.getElementById('edit-area');
+  if (currentStudent.deploymentArea) {
+    areaSelect.value = currentStudent.deploymentArea;
+  }
+  toggleEditSchool();
+  
+  // 5. Set School
+  if (currentStudent.schoolName) {
+    document.getElementById('edit-school').value = currentStudent.schoolName;
+  }
+
   document.getElementById('profile-modal').classList.add('active');
 }
 
@@ -332,13 +365,77 @@ function closeProfileModal() {
   document.getElementById('profile-modal').classList.remove('active');
 }
 
+function updateEditCourses() {
+  const field = document.getElementById('edit-field').value;
+  const courseSelect = document.getElementById('edit-course');
+  const areaSelect = document.getElementById('edit-area');
+  
+  courseSelect.innerHTML = '<option value="">Select Course</option>';
+  areaSelect.innerHTML = '<option value="">Select Course First</option>';
+  document.getElementById('edit-school-group').style.display = 'none';
+  
+  if (field && courseData[field]) {
+    courseData[field].courses.forEach(c => {
+      const opt = document.createElement('option'); opt.value = c; opt.innerText = c; courseSelect.appendChild(opt);
+    });
+  }
+  courseSelect.onchange = updateEditAreas;
+}
+
+function updateEditAreas() {
+  const field = document.getElementById('edit-field').value;
+  const course = document.getElementById('edit-course').value;
+  const areaSelect = document.getElementById('edit-area');
+  const schoolGroup = document.getElementById('edit-school-group');
+  
+  areaSelect.innerHTML = '<option value="">Select Area</option>';
+  schoolGroup.style.display = 'none';
+  
+  if (field && course && courseData[field].areas[course]) {
+    courseData[field].areas[course].forEach(a => {
+      const opt = document.createElement('option'); opt.value = a; opt.innerText = a; areaSelect.appendChild(opt);
+    });
+  }
+  areaSelect.onchange = toggleEditSchool;
+}
+
+function toggleEditSchool() {
+  const area = document.getElementById('edit-area').value;
+  document.getElementById('edit-school-group').style.display = (area === 'School') ? 'flex' : 'none';
+}
+
 async function saveProfile() {
+  const lrn = currentStudent.lrn;
+  const lastName = document.getElementById('edit-lastname').value.trim();
+  const firstName = document.getElementById('edit-firstname').value.trim();
+  const middleName = document.getElementById('edit-middlename').value.trim();
+  const sex = document.getElementById('edit-sex').value;
+  const section = document.getElementById('edit-section').value.trim();
+  const field = document.getElementById('edit-field').value;
+  const course = document.getElementById('edit-course').value;
+  const deploymentArea = document.getElementById('edit-area').value;
+  const schoolName = document.getElementById('edit-school').value;
   const supervisor = document.getElementById('edit-supervisor').value.trim();
-  const res = await callAPI('updateProfile', { lrn: currentStudent.lrn, supervisor });
+  
+  if (!lastName || !firstName || !sex || !section) {
+    alert('Please fill in all required fields (Name, Sex, Section).');
+    return;
+  }
+
+  const payload = { lrn, lastName, firstName, middleName, sex, section, field, course, deploymentArea, schoolName, supervisor };
+  const res = await callAPI('updateProfile', payload);
+  
   if (res.success) {
-    currentStudent.supervisor = supervisor;
+    // I-update ang localStorage
+    currentStudent = res.student; 
     localStorage.setItem('wi_student', JSON.stringify(currentStudent));
-    alert('Profile updated!');
+    
+    // I-update ang pangalan sa dashboard
+    document.getElementById('student-name').innerText = `${currentStudent.firstName} ${currentStudent.lastName}`;
+    
+    alert('Profile updated successfully!');
     closeProfileModal();
-  } else { alert(res.error); }
+  } else { 
+    alert(res.error); 
+  }
 }
