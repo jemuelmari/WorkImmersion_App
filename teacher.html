@@ -13,7 +13,7 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System</p>
+      <p class="subtitle">Work Immersion System (v2.0)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -59,7 +59,7 @@
     <div class="glass-card dashboard-card" style="max-width: 1100px;">
       <div class="dashboard-header">
         <div>
-          <h2>Teacher Dashboard</h2>
+          <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(Updated)</span></h2>
           <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
         </div>
         <button class="btn-logout" onclick="logoutTeacher()">Logout</button>
@@ -133,7 +133,7 @@
           </div>
         </div>
         
-        <!-- SUBMISSION TRACKER -->
+        <!-- SUBMISSION TRACKER (Dapat ito ang lumabas) -->
         <div id="submission-tracker" style="display: none; background: rgba(0,122,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
           <h4 style="margin-bottom: 10px; font-size: 14px;">Diary Submission Status:</h4>
           <div id="tracker-grid" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
