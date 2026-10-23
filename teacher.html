@@ -111,17 +111,29 @@
         </div>
       </div>
 
-      <!-- SCORES TAB -->
+      <!-- SCORES TAB (UPDATED WITH SEARCH DROPDOWN) -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
+        
         <div class="row">
-          <div class="input-group">
-            <label>Student LRN</label>
-            <input type="text" id="score-lrn" placeholder="123456789012">
+          <!-- Searchable Dropdown para sa Student Name -->
+          <div class="input-group" style="flex: 2;">
+            <label>Search & Select Student</label>
+            <input type="text" id="search-grade-student" list="students-list" placeholder="Type student name or LRN..." oninput="onGradeStudentSelected()">
+            <datalist id="students-list">
+              <!-- Lalabas dito ang mga pangalan dynamically -->
+            </datalist>
           </div>
-          <div class="input-group">
+          
+          <!-- Hidden field para sa LRN (awtomatikong mapupuno) -->
+          <div class="input-group" style="flex: 1;">
+            <label>LRN (Auto-filled)</label>
+            <input type="text" id="score-lrn" placeholder="Select student first" readonly style="background: #eee;">
+          </div>
+          
+          <div class="input-group" style="flex: 1;">
             <label>Day Number</label>
-            <input type="number" id="score-day" min="1" max="10">
+            <input type="number" id="score-day" min="1" max="10" placeholder="1-10">
           </div>
         </div>
         
@@ -278,7 +290,6 @@
       document.getElementById('teacher-dash').classList.add('active');
       document.getElementById('teacher-info').innerText = `Logged in as: ${currentTeacher.email} (${currentTeacher.role})`;
       
-      // Kung Admin, ipakita ang Approvals tab
       if (currentTeacher.role === 'Admin') {
         document.getElementById('tab-approvals').style.display = 'block';
       } else {
@@ -380,6 +391,53 @@
 
       renderStudentList();
       renderMasterlistPreview();
+      populateGradeDatalist(); // Tawagin ang bagong function
+    }
+
+    // ---- NEW: POPULATE STUDENT DATALIST PARA SA GRADING ----
+    function populateGradeDatalist() {
+      const datalist = document.getElementById('students-list');
+      datalist.innerHTML = '';
+      
+      // Ayusin alphabetically
+      allStudents.sort((a, b) => a.lastName.localeCompare(b.lastName)).forEach(s => {
+        const option = document.createElement('option');
+        // Value na ipapasok sa input ay "LastName, FirstName (LRN)"
+        option.value = `${s.lastName}, ${s.firstName} (${s.lrn})`;
+        // Datalist attribute para awtomatikong mapuno ang hidden LRN field
+        option.setAttribute('data-lrn', s.lrn);
+        datalist.appendChild(option);
+      });
+    }
+
+    // ---- NEW: EVENT HANDLER KAPAG NAPILI ANG STUDENT ----
+    function onGradeStudentSelected() {
+      const input = document.getElementById('search-grade-student').value;
+      const lrnInput = document.getElementById('score-lrn');
+      
+      // Hanapin sa datalist kung tugma ang napili
+      const options = document.querySelectorAll('#students-list option');
+      let foundLrn = '';
+      
+      for (let opt of options) {
+        if (opt.value === input) {
+          foundLrn = opt.getAttribute('data-lrn');
+          break;
+        }
+      }
+      
+      // Kung may nahanap, ilagay sa hidden input. Kung wala, i-blangko.
+      if (foundLrn) {
+        lrnInput.value = foundLrn;
+        lrnInput.style.background = 'white';
+        lrnInput.style.color = 'var(--success)';
+        lrnInput.style.fontWeight = 'bold';
+      } else {
+        lrnInput.value = '';
+        lrnInput.style.background = '#eee';
+        lrnInput.style.color = 'inherit';
+        lrnInput.style.fontWeight = 'normal';
+      }
     }
 
     function renderStudentList() {
@@ -531,6 +589,11 @@
       const c5 = parseInt(document.getElementById('crit-5').value) || 0;
       const total = c1 + c2 + c3 + c4 + c5;
       
+      if (!lrn || !dayNumber) {
+        alert('Please select a student and enter a Day Number.');
+        return;
+      }
+
       const res = await callAPI('saveScore', { lrn, dayNumber, score: total, criteria: { c1, c2, c3, c4, c5 } });
       if (res.success) {
         document.getElementById('score-msg').innerText = 'Score submitted successfully!';
