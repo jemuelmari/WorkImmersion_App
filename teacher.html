@@ -13,14 +13,13 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v2.0)</p>
+      <p class="subtitle">Work Immersion System (v3.0)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
         <button id="tab-t-signup" class="tab" onclick="switchTeacherTab('signup')">Register</button>
       </div>
 
-      <!-- TEACHER LOGIN FORM -->
       <form id="teacher-login-form" class="auth-form active" onsubmit="handleTeacherLogin(event)">
         <div class="input-group">
           <label>Email</label>
@@ -34,7 +33,6 @@
         <p id="t-login-error" class="error-msg"></p>
       </form>
 
-      <!-- TEACHER REGISTER FORM -->
       <form id="teacher-signup-form" class="auth-form" onsubmit="handleTeacherRegister(event)">
         <div class="input-group">
           <label>Email</label>
@@ -59,7 +57,7 @@
     <div class="glass-card dashboard-card" style="max-width: 1100px;">
       <div class="dashboard-header">
         <div>
-          <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(Updated)</span></h2>
+          <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v3.0)</span></h2>
           <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
         </div>
         <button class="btn-logout" onclick="logoutTeacher()">Logout</button>
@@ -73,7 +71,6 @@
         <button class="tab" id="tab-approvals" onclick="switchTeachTab('approvals')" style="display: none; color: var(--danger); font-weight: bold;">Approvals</button>
       </div>
 
-      <!-- ATTENDANCE TAB -->
       <div id="teach-attendance" class="dash-content active">
         <div class="row-controls">
           <div class="input-group" style="flex: 2;">
@@ -111,7 +108,6 @@
         </div>
       </div>
 
-      <!-- SCORES TAB (WITH SUBMISSION TRACKER) -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
         
@@ -133,7 +129,7 @@
           </div>
         </div>
         
-        <!-- SUBMISSION TRACKER (Dapat ito ang lumabas) -->
+        <!-- SUBMISSION TRACKER -->
         <div id="submission-tracker" style="display: none; background: rgba(0,122,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
           <h4 style="margin-bottom: 10px; font-size: 14px;">Diary Submission Status:</h4>
           <div id="tracker-grid" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
@@ -151,7 +147,6 @@
         <p id="score-msg" class="success-msg"></p>
       </div>
 
-      <!-- ANNOUNCEMENT TAB -->
       <div id="teach-announce" class="dash-content">
         <h3>Post Announcement to All Students</h3>
         <div class="input-group">
@@ -161,7 +156,6 @@
         <p id="announce-success" class="success-msg"></p>
       </div>
 
-      <!-- MASTERLIST TAB -->
       <div id="teach-masterlist" class="dash-content">
         <h3>Generate Masterlist (Word Document)</h3>
         <p class="note">Pumili ng Section para i-filter ang mga estudyante bago mag-generate.</p>
@@ -196,7 +190,6 @@
         </div>
       </div>
 
-      <!-- APPROVALS TAB (Admin Only) -->
       <div id="teach-approvals" class="dash-content">
         <h3>Pending Teacher Registrations</h3>
         <p class="note">Ito ay makikita lamang ng Main Admin. Aprubahan ang mga bagong guro.</p>
@@ -225,7 +218,6 @@
     let sectionsList = new Set();
     let allStudents = [];
 
-    // ---- TEACHER AUTHENTICATION ----
     function switchTeacherTab(tab) {
       document.querySelectorAll('#teacher-auth .auth-form').forEach(f => f.classList.remove('active'));
       document.querySelectorAll('#teacher-auth .tabs .tab').forEach(t => t.classList.remove('active'));
@@ -286,7 +278,6 @@
       document.getElementById('teacher-login-form').reset();
     }
 
-    // ---- TEACHER DASHBOARD ----
     function showTeacherDashboard() {
       document.getElementById('teacher-auth').classList.remove('active');
       document.getElementById('teacher-dash').classList.add('active');
@@ -310,6 +301,7 @@
 
       if (tab === 'approvals') loadPendingTeachers();
       if (tab === 'scores') {
+        console.log("Loading teacher data for scores tab...");
         loadTeacherData(); // Force refresh data when entering Grade tab
       }
     }
@@ -361,11 +353,12 @@
       loadPendingTeachers();
     }
 
-    // ---- DATA LOADING ----
     async function loadTeacherData() {
       const attRes = await callAPI('getAllAttendance');
       const studRes = await callAPI('getSummary');
       
+      console.log("Received student data:", studRes);
+
       allRecords = [];
       studentMap = {};
       sectionsList.clear();
@@ -409,6 +402,7 @@
         option.setAttribute('data-lrn', s.lrn);
         datalist.appendChild(option);
       });
+      console.log("Datalist populated with", allStudents.length, "students.");
     }
 
     function onGradeStudentSelected() {
@@ -416,6 +410,8 @@
       const lrnInput = document.getElementById('score-lrn');
       const tracker = document.getElementById('submission-tracker');
       const trackerGrid = document.getElementById('tracker-grid');
+      
+      console.log("Input changed:", input);
       
       const options = document.querySelectorAll('#students-list option');
       let foundStudent = null;
@@ -428,12 +424,12 @@
       }
       
       if (foundStudent) {
+        console.log("Found student:", foundStudent);
         lrnInput.value = foundStudent.lrn;
         lrnInput.style.background = 'white';
         lrnInput.style.color = 'var(--success)';
         lrnInput.style.fontWeight = 'bold';
 
-        // Ipakita ang Submission Tracker
         tracker.style.display = 'block';
         trackerGrid.innerHTML = '';
         
@@ -640,7 +636,6 @@
       }
     }
 
-    // Check kung may naka-save na teacher session
     window.onload = () => {
       const saved = localStorage.getItem('wi_teacher');
       if (saved) {
