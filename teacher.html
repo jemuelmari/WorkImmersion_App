@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Portal - Work Immersion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="teacher-auth" class="screen active">
+    <div class="glass-card auth-card">
+      <h1>Teacher Portal</h1>
+      <p class="subtitle">Enter password to access</p>
+      <div class="input-group">
+        <input type="password" id="teacher-pass" placeholder="Teacher Password">
+      </div>
+      <button class="btn-primary" onclick="loginTeacher()">Access Dashboard</button>
+      <p id="teacher-error" class="error-msg"></p>
+    </div>
+  </div>
+
+  <div id="teacher-dash" class="screen">
+    <div class="glass-card dashboard-card" style="max-width: 800px;">
+      <div class="dashboard-header">
+        <h2>Teacher Dashboard</h2>
+        <button class="btn-logout" onclick="logoutTeacher()">Logout</button>
+      </div>
+
+      <div class="tabs dashboard-tabs">
+        <button class="tab active" onclick="switchTeachTab('attendance')">Attendance</button>
+        <button class="tab" onclick="switchTeachTab('scores')">Grade Diary</button>
+        <button class="tab" onclick="switchTeachTab('announce')">Announcement</button>
+      </div>
+
+      <!-- ATTENDANCE TAB -->
+      <div id="teach-attendance" class="dash-content active">
+        <h3>Daily Attendance Logs</h3>
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="attendance-table">
+            <thead>
+              <tr>
+                <th>LRN</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+                <th>Total Hrs</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SCORES TAB -->
+      <div id="teach-scores" class="dash-content">
+        <h3>Grade Student Diary</h3>
+        <div class="input-group">
+          <label>Enter Student LRN</label>
+          <input type="text" id="score-lrn" placeholder="123456789012">
+        </div>
+        <div class="input-group">
+          <label>Day Number</label>
+          <input type="number" id="score-day" min="1" max="10">
+        </div>
+        
+        <div class="rubric-box">
+          <h4>Rubrics (Max 20 Points)</h4>
+          <div class="input-group">
+            <label>Content & Relevance (Max 5)</label>
+            <input type="number" id="crit-1" max="5" min="0">
+          </div>
+          <div class="input-group">
+            <label>Grammar & Clarity (Max 5)</label>
+            <input type="number" id="crit-2" max="5" min="0">
+          </div>
+          <div class="input-group">
+            <label>Reflection & Insight (Max 5)</label>
+            <input type="number" id="crit-3" max="5" min="0">
+          </div>
+          <div class="input-group">
+            <label>Completeness (Max 3)</label>
+            <input type="number" id="crit-4" max="3" min="0">
+          </div>
+          <div class="input-group">
+            <label>Punctuality (Max 2)</label>
+            <input type="number" id="crit-5" max="2" min="0">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="submitScore()">Submit Score</button>
+      </div>
+
+      <!-- ANNOUNCEMENT TAB -->
+      <div id="teach-announce" class="dash-content">
+        <h3>Post Announcement</h3>
+        <div class="input-group">
+          <textarea id="announce-text" rows="5" placeholder="Type your announcement here..."></textarea>
+        </div>
+        <button class="btn-primary" onclick="postAnnouncement()">Post to Students</button>
+        <p id="announce-success" class="success-msg"></p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const TEACHER_PASS = 'teacher123'; // Palitan mo ito ng gusto mong password
+    const API_URL = '/api/proxy';
+
+    function loginTeacher() {
+      const pass = document.getElementById('teacher-pass').value;
+      if (pass === TEACHER_PASS) {
+        document.getElementById('teacher-auth').classList.remove('active');
+        document.getElementById('teacher-dash').classList.add('active');
+        loadTeacherAttendance();
+      } else {
+        document.getElementById('teacher-error').innerText = 'Incorrect password.';
+      }
+    }
+
+    function logoutTeacher() {
+      document.getElementById('teacher-dash').classList.remove('active');
+      document.getElementById('teacher-auth').classList.add('active');
+      document.getElementById('teacher-pass').value = '';
+    }
+
+    function switchTeachTab(tab) {
+      document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.dashboard-tabs .tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`teach-${tab}`).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    async function callAPI(action, payload = {}) {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, ...payload })
+      });
+      return await res.json();
+    }
+
+    async function loadTeacherAttendance() {
+      const res = await callAPI('getAllAttendance');
+      const tbody = document.querySelector('#attendance-table tbody');
+      tbody.innerHTML = '';
+      
+      if (res.success && res.records) {
+        // Kunin ang mga pangalan ng students
+        const studentRes = await callAPI('getSummary');
+        const nameMap = {};
+        if (studentRes.success) {
+          studentRes.summary.forEach(s => nameMap[s.lrn] = `${s.lastName}, ${s.firstName}`);
+        }
+
+        res.records.reverse().forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.lrn}</td>
+            <td>${nameMap[r.lrn] || 'Unknown'}</td>
+            <td>${r.date}</td>
+            <td>${r.timeIn || '-'}</td>
+            <td>${r.timeOut || '-'}</td>
+            <td>${r.totalHours || '0'} hrs</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    async function submitScore() {
+      const lrn = document.getElementById('score-lrn').value.trim();
+      const dayNumber = document.getElementById('score-day').value;
+      const c1 = parseInt(document.getElementById('crit-1').value) || 0;
+      const c2 = parseInt(document.getElementById('crit-2').value) || 0;
+      const c3 = parseInt(document.getElementById('crit-3').value) || 0;
+      const c4 = parseInt(document.getElementById('crit-4').value) || 0;
+      const c5 = parseInt(document.getElementById('crit-5').value) || 0;
+      
+      const total = c1 + c2 + c3 + c4 + c5;
+      
+      const criteria = { c1, c2, c3, c4, c5 };
+      
+      const res = await callAPI('saveScore', { lrn, dayNumber, score: total, criteria });
+      if (res.success) alert('Score submitted successfully!');
+      else alert(res.error);
+    }
+
+    async function postAnnouncement() {
+      const text = document.getElementById('announce-text').value;
+      const res = await callAPI('saveAnnouncement', { announcement: text });
+      if (res.success) {
+        document.getElementById('announce-success').innerText = 'Announcement posted!';
+        setTimeout(() => document.getElementById('announce-success').innerText = '', 3000);
+      }
+    }
+  </script>
+</body>
+</html>
