@@ -22,7 +22,7 @@
   </div>
 
   <div id="teacher-dash" class="screen">
-    <div class="glass-card dashboard-card" style="max-width: 1000px;">
+    <div class="glass-card dashboard-card" style="max-width: 1100px;">
       <div class="dashboard-header">
         <h2>Teacher Dashboard</h2>
         <button class="btn-logout" onclick="logoutTeacher()">Logout</button>
@@ -32,9 +32,9 @@
         <button class="tab active" onclick="switchTeachTab('attendance')">Attendance</button>
         <button class="tab" onclick="switchTeachTab('scores')">Grade Diary</button>
         <button class="tab" onclick="switchTeachTab('announce')">Announcement</button>
+        <button class="tab" onclick="switchTeachTab('masterlist')">Masterlist</button>
       </div>
 
-      <!-- ATTENDANCE TAB -->
       <div id="teach-attendance" class="dash-content active">
         <div class="row" style="margin-bottom: 10px; align-items: flex-end;">
           <div class="input-group" style="flex: 2;">
@@ -45,7 +45,6 @@
             <label>Filter by Section</label>
             <select id="filter-section" onchange="renderStudentList()">
               <option value="All">All Sections</option>
-              <!-- Options will be loaded dynamically -->
             </select>
           </div>
           <div style="display: flex; gap: 5px; margin-bottom: 2px;">
@@ -73,7 +72,6 @@
         </div>
       </div>
 
-      <!-- SCORES TAB -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
         <div class="row">
@@ -89,32 +87,16 @@
         
         <div class="rubric-box">
           <h4>Rubrics</h4>
-          <div class="input-group">
-            <label>Content & Relevance (Max 5)</label>
-            <input type="number" id="crit-1" max="5" min="0" placeholder="0-5">
-          </div>
-          <div class="input-group">
-            <label>Grammar & Clarity (Max 5)</label>
-            <input type="number" id="crit-2" max="5" min="0" placeholder="0-5">
-          </div>
-          <div class="input-group">
-            <label>Reflection & Insight (Max 5)</label>
-            <input type="number" id="crit-3" max="5" min="0" placeholder="0-5">
-          </div>
-          <div class="input-group">
-            <label>Completeness (Max 3)</label>
-            <input type="number" id="crit-4" max="3" min="0" placeholder="0-3">
-          </div>
-          <div class="input-group">
-            <label>Punctuality (Max 2)</label>
-            <input type="number" id="crit-5" max="2" min="0" placeholder="0-2">
-          </div>
+          <div class="input-group"><label>Content & Relevance (Max 5)</label><input type="number" id="crit-1" max="5" min="0" placeholder="0-5"></div>
+          <div class="input-group"><label>Grammar & Clarity (Max 5)</label><input type="number" id="crit-2" max="5" min="0" placeholder="0-5"></div>
+          <div class="input-group"><label>Reflection & Insight (Max 5)</label><input type="number" id="crit-3" max="5" min="0" placeholder="0-5"></div>
+          <div class="input-group"><label>Completeness (Max 3)</label><input type="number" id="crit-4" max="3" min="0" placeholder="0-3"></div>
+          <div class="input-group"><label>Punctuality (Max 2)</label><input type="number" id="crit-5" max="2" min="0" placeholder="0-2"></div>
         </div>
         <button class="btn-primary" onclick="submitScore()">Submit Score</button>
         <p id="score-msg" class="success-msg"></p>
       </div>
 
-      <!-- ANNOUNCEMENT TAB -->
       <div id="teach-announce" class="dash-content">
         <h3>Post Announcement to All Students</h3>
         <div class="input-group">
@@ -124,15 +106,50 @@
         <p id="announce-success" class="success-msg"></p>
       </div>
 
+      <div id="teach-masterlist" class="dash-content">
+        <h3>Generate Masterlist (Word Document)</h3>
+        <p class="note">Pumili ng Section para i-filter ang mga estudyante bago mag-generate.</p>
+        
+        <div class="row" style="align-items: flex-end; margin-bottom: 20px;">
+          <div class="input-group" style="flex: 2;">
+            <label>Filter by Section</label>
+            <select id="masterlist-section">
+              <option value="All">All Sections</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="generateMasterlistDocx()" style="flex: 1; height: 42px;">Download .doc</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="masterlist-preview">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Last Name</th>
+                <th>First Name</th>
+                <th>Middle Name</th>
+                <th>Section</th>
+                <th>Sex</th>
+                <th>Course</th>
+                <th>Field</th>
+                <th>Assigned Area</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
-    const TEACHER_PASS = 'teacher123'; // Palitan mo ito ng sarili mong password
+    const TEACHER_PASS = 'teacher123'; // ⚠️ PALITAN MO ITO
     const API_URL = '/api/proxy';
     let allRecords = [];
     let studentMap = {};
     let sectionsList = new Set();
+    let allStudents = [];
 
     function loginTeacher() {
       const pass = document.getElementById('teacher-pass').value;
@@ -167,16 +184,16 @@
     }
 
     async function loadTeacherData() {
-      // Kunin lahat ng attendance
       const attRes = await callAPI('getAllAttendance');
-      // Kunin lahat ng students (para sa pangalan at section)
       const studRes = await callAPI('getSummary');
       
       allRecords = [];
       studentMap = {};
       sectionsList.clear();
+      allStudents = [];
 
       if (studRes.success && studRes.summary) {
+        allStudents = studRes.summary;
         studRes.summary.forEach(s => {
           studentMap[s.lrn] = s;
           if (s.section) sectionsList.add(s.section);
@@ -187,14 +204,19 @@
         allRecords = attRes.records.reverse();
       }
 
-      // Populate Section Dropdown
       const secFilter = document.getElementById('filter-section');
+      const masterSecFilter = document.getElementById('masterlist-section');
+      
       secFilter.innerHTML = '<option value="All">All Sections</option>';
+      masterSecFilter.innerHTML = '<option value="All">All Sections</option>';
+      
       Array.from(sectionsList).sort().forEach(sec => {
         secFilter.innerHTML += `<option value="${sec}">${sec}</option>`;
+        masterSecFilter.innerHTML += `<option value="${sec}">${sec}</option>`;
       });
 
       renderStudentList();
+      renderMasterlistPreview();
     }
 
     function renderStudentList() {
@@ -206,14 +228,9 @@
       let filtered = allRecords.filter(r => {
         const stud = studentMap[r.lrn];
         if (!stud) return false;
-        
-        // Search Filter
         const fullName = `${stud.lastName}, ${stud.firstName}`.toLowerCase();
         const matchSearch = fullName.includes(searchQuery) || r.lrn.toString().includes(searchQuery);
-        
-        // Section Filter
         const matchSection = (sectionFilter === 'All') || (stud.section === sectionFilter);
-
         return matchSearch && matchSection;
       });
 
@@ -233,22 +250,109 @@
       });
     }
 
-    function sortAlpha() {
-      allRecords.sort((a, b) => {
-        const nameA = `${studentMap[a.lrn]?.lastName || ''} ${studentMap[a.lrn]?.firstName || ''}`.toLowerCase();
-        const nameB = `${studentMap[b.lrn]?.lastName || ''} ${studentMap[b.lrn]?.firstName || ''}`.toLowerCase();
-        return nameA.localeCompare(nameB);
+    function renderMasterlistPreview() {
+      const sec = document.getElementById('masterlist-section').value;
+      const tbody = document.querySelector('#masterlist-preview tbody');
+      tbody.innerHTML = '';
+
+      let filtered = allStudents.filter(s => sec === 'All' || s.section === sec);
+      filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
+
+      filtered.forEach((s, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${s.lastName}</td>
+          <td>${s.firstName}</td>
+          <td>${s.middleName || ''}</td>
+          <td>${s.section}</td>
+          <td>${s.sex || '-'}</td>
+          <td>${s.course}</td>
+          <td>${s.field}</td>
+          <td>${s.deploymentArea}</td>
+        `;
+        tbody.appendChild(tr);
       });
-      renderStudentList();
+    }
+
+    document.getElementById('masterlist-section').addEventListener('change', renderMasterlistPreview);
+
+    function generateMasterlistDocx() {
+      const sec = document.getElementById('masterlist-section').value;
+      let filtered = allStudents.filter(s => sec === 'All' || s.section === sec);
+      filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
+
+      if (filtered.length === 0) {
+        alert('Walang estudyante sa section na ito.');
+        return;
+      }
+
+      let html = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Masterlist</title>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th, td { border: 1px solid black; padding: 5px; text-align: left; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            h2 { text-align: center; }
+          </style>
+        </head>
+        <body>
+          <h2>WORK IMMERSION MASTERLIST</h2>
+          <p style="text-align:center;">Section: ${sec}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Last Name</th>
+                <th>First Name</th>
+                <th>Middle Name</th>
+                <th>Section</th>
+                <th>Sex</th>
+                <th>Course</th>
+                <th>Field</th>
+                <th>Assigned Area</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filtered.forEach((s, index) => {
+        html += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${s.lastName}</td>
+            <td>${s.firstName}</td>
+            <td>${s.middleName || ''}</td>
+            <td>${s.section || ''}</td>
+            <td>${s.sex || ''}</td>
+            <td>${s.course || ''}</td>
+            <td>${s.field || ''}</td>
+            <td>${s.deploymentArea || ''}</td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table></body></html>`;
+
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Masterlist_${sec === 'All' ? 'AllSections' : sec}.doc`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     async function normalizeNames() {
-      if (!confirm('Ito ay gagawing Title Case ang lahat ng pangalan ng estudyante (e.g. "dela cruz" -> "Dela Cruz"). Sigurado ka ba?')) return;
-      
+      if (!confirm('Gagawing Title Case ang lahat ng pangalan. Sigurado ka ba?')) return;
       const res = await callAPI('normalizeNames');
       if (res.success) {
         alert(res.message);
-        loadTeacherData(); // I-reload ang data
+        loadTeacherData();
       } else {
         alert(res.error);
       }
@@ -263,9 +367,8 @@
       const c4 = parseInt(document.getElementById('crit-4').value) || 0;
       const c5 = parseInt(document.getElementById('crit-5').value) || 0;
       const total = c1 + c2 + c3 + c4 + c5;
-      const criteria = { c1, c2, c3, c4, c5 };
       
-      const res = await callAPI('saveScore', { lrn, dayNumber, score: total, criteria });
+      const res = await callAPI('saveScore', { lrn, dayNumber, score: total, criteria: { c1, c2, c3, c4, c5 } });
       if (res.success) {
         document.getElementById('score-msg').innerText = 'Score submitted successfully!';
         setTimeout(() => document.getElementById('score-msg').innerText = '', 3000);
