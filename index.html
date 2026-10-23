@@ -72,7 +72,11 @@
           </div>
           <div class="input-group">
             <label>Section</label>
-            <input type="text" id="signup-section" placeholder="e.g. STEM 12-A" required>
+            <select id="signup-section" required>
+              <option value="">Select Section</option>
+              <option value="12 GAS">12 GAS</option>
+              <option value="12 HUMSS">12 HUMSS</option>
+            </select>
           </div>
         </div>
         <div class="input-group">
@@ -185,7 +189,7 @@
     </div>
   </div>
 
-  <!-- EDIT PROFILE MODAL (UPDATED) -->
+  <!-- EDIT PROFILE MODAL -->
   <div id="profile-modal" class="modal">
     <div class="glass-card modal-content" style="max-height: 90vh; overflow-y: auto; max-width: 500px;">
       <h3>Edit Profile</h3>
@@ -217,7 +221,10 @@
         </div>
         <div class="input-group">
           <label>Section</label>
-          <input type="text" id="edit-section" required>
+          <select id="edit-section" required>
+            <option value="12 GAS">12 GAS</option>
+            <option value="12 HUMSS">12 HUMSS</option>
+          </select>
         </div>
       </div>
 
