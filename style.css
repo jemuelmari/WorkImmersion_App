@@ -28,7 +28,7 @@ body {
 .subtitle { text-align: center; color: var(--text-sub); margin-bottom: 25px; font-size: 14px; }
 
 .tabs { display: flex; background: rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
-.tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.3s ease; }
+.tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.3s ease; font-size: 13px; }
 .tab.active { background: white; color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
 .auth-form { display: none; flex-direction: column; gap: 15px; }
@@ -39,13 +39,14 @@ body {
 .input-group input, .input-group select, .input-group textarea {
   padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);
   background: rgba(255, 255, 255, 0.6); font-size: 14px; outline: none; transition: border 0.3s ease;
+  width: 100%;
 }
 .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--primary); background: white; }
-.row { display: flex; gap: 10px; }
-.row .input-group { flex: 1; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row .input-group { flex: 1; min-width: 150px; }
 
 .btn-primary, .btn-success, .btn-danger, .btn-secondary, .btn-logout {
-  padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease;
+  padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease; text-align: center;
 }
 .btn-primary { background: var(--primary); color: white; }
 .btn-success { background: var(--success); color: white; }
@@ -55,10 +56,10 @@ body {
 .btn-primary:hover, .btn-success:hover, .btn-danger:hover { transform: scale(0.98); opacity: 0.9; }
 .error-msg { color: var(--danger); font-size: 13px; text-align: center; min-height: 16px; }
 
-.dashboard-card { max-width: 600px; }
-.dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.dashboard-card { max-width: 600px; width: 100%; }
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
 .dashboard-header h2 { font-size: 20px; }
-.dashboard-tabs { margin-bottom: 20px; }
+.dashboard-tabs { margin-bottom: 20px; overflow-x: auto; }
 .dash-content { display: none; flex-direction: column; gap: 15px; }
 .dash-content.active { display: flex; }
 
@@ -69,18 +70,18 @@ body {
 .total-hours { font-size: 32px; font-weight: 700; color: var(--success); }
 
 .log-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-.log-list li { background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; justify-content: space-between; }
+.log-list li { background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; justify-content: space-between; align-items: center;}
 
-.image-preview { display: flex; gap: 10px; flex-wrap: wrap; }
+.image-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
 .note { font-size: 12px; color: var(--danger); font-style: italic; }
 
 /* ================= TEACHER EXTRAS ================= */
 .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: rgba(255, 255, 255, 0.6); border-radius: 12px; overflow: hidden; }
-.data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; }
+.data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; white-space: nowrap; }
 .data-table th { background: rgba(0, 122, 255, 0.1); color: var(--primary); font-weight: 600; }
-.rubric-box { background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 12px; margin: 15px 0; }
-.rubric-box h4 { margin-bottom: 10px; color: var(--text-main); }
+.rubric-box { background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 12px; margin: 15px 0; display: flex; flex-direction: column; gap: 10px;}
+.rubric-box h4 { margin-bottom: 5px; color: var(--text-main); }
 .success-msg { color: var(--success); font-size: 14px; text-align: center; margin-top: 10px; }
 
 .announcement-banner {
@@ -88,3 +89,31 @@ body {
   padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;
 }
 .announcement-banner.active { display: block; }
+
+/* ================= MODAL (EDIT PROFILE) ================= */
+.modal {
+  display: none; /* Nakatago by default */
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  z-index: 1000; justify-content: center; align-items: center; padding: 20px;
+}
+
+.modal.active {
+  display: flex; /* Lalabas lang kapag may class na 'active' */
+}
+
+.modal-content {
+  max-width: 400px;
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Search & Filter Row Fix */
+.row-controls {
+  display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end; flex-wrap: wrap;
+}
+.row-controls .input-group { margin-bottom: 0; }
