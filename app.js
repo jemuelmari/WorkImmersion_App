@@ -1,10 +1,9 @@
 // ============================================================
 // WORK IMMERSION ALL-IN-ONE APP
-// Frontend Logic (app.js) - Updated Version
+// Frontend Logic (app.js)
 // ============================================================
 
 const API_URL = '/api/proxy';
-
 let currentStudent = null;
 let diaryImagesBase64 = [];
 
@@ -14,7 +13,6 @@ let diaryImagesBase64 = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   startClock();
-  
   const saved = localStorage.getItem('wi_student');
   if (saved) {
     try {
@@ -35,7 +33,6 @@ function startClock() {
   }, 1000);
 }
 
-// Pinalakas natin ang API call para masigurong JSON ang bumabalik
 async function callAPI(action, payload = {}) {
   try {
     const res = await fetch(API_URL, {
@@ -43,24 +40,19 @@ async function callAPI(action, payload = {}) {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action, ...payload })
     });
-    
-    // Kunin ang text muna para makita kung may error
     const text = await res.text();
-    
     try {
       return JSON.parse(text);
     } catch (e) {
-      console.error("Server returned non-JSON:", text);
-      return { success: false, error: "Server error. Check your Apps Script deployment." };
+      return { success: false, error: "Server error." };
     }
   } catch (err) {
-    console.error('Network Error:', err);
-    return { success: false, error: 'Network error. Please check your connection.' };
+    return { success: false, error: 'Network error.' };
   }
 }
 
 // ============================================================
-// 2. AUTHENTICATION (Login / Signup)
+// 2. AUTHENTICATION
 // ============================================================
 
 function switchAuthTab(tab) {
@@ -82,14 +74,9 @@ async function handleLogin(e) {
   const password = document.getElementById('login-password').value;
   const errorEl = document.getElementById('login-error');
   
-  if (!lrn || !password) {
-    errorEl.innerText = 'Please enter both LRN and Password.';
-    return;
-  }
-
+  if (!lrn || !password) { errorEl.innerText = 'Please enter both fields.'; return; }
   errorEl.innerText = 'Logging in...';
   
-  // Siguraduhing string ang LRN bago ipadala
   const res = await callAPI('login', { lrn: String(lrn), password: String(password) });
   
   if (res.success && res.student) {
@@ -98,7 +85,7 @@ async function handleLogin(e) {
     errorEl.innerText = '';
     showDashboard();
   } else {
-    errorEl.innerText = res.error || 'Login failed. Please check your credentials.';
+    errorEl.innerText = res.error || 'Login failed.';
   }
 }
 
@@ -114,20 +101,14 @@ async function handleSignup(e) {
   const schoolName = document.getElementById('signup-school').value;
   
   const errorEl = document.getElementById('signup-error');
-  
-  if (!lrn || !password || !lastName || !firstName) {
-    errorEl.innerText = 'Please fill in all required fields.';
-    return;
-  }
+  if (!lrn || !password || !lastName || !firstName) { errorEl.innerText = 'Fill required fields.'; return; }
 
   errorEl.innerText = 'Creating account...';
-  
   const res = await callAPI('signup', { lrn, lastName, firstName, password, field, course, deploymentArea, schoolName });
   
   if (res.success) {
     alert('Signup successful! You can now log in.');
     switchAuthTab('login');
-    // Auto-fill LRN sa login form para madali
     document.getElementById('login-lrn').value = lrn;
     errorEl.innerText = '';
   } else {
@@ -152,8 +133,8 @@ function showDashboard() {
   document.getElementById('dashboard-screen').classList.add('active');
   document.getElementById('student-name').innerText = `${currentStudent.firstName} ${currentStudent.lastName}`;
   
-  // Reset to first tab
   switchDashTab('time');
+  loadAnnouncement();
   loadAttendance();
   loadDiary();
   loadRequirements();
@@ -162,59 +143,24 @@ function showDashboard() {
 function switchDashTab(tabName) {
   document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.dashboard-tabs .tab').forEach(t => t.classList.remove('active'));
+  const target = document.getElementById(`dash-${tabName}`);
+  if (target) target.classList.add('active');
   
-  const targetContent = document.getElementById(`dash-${tabName}`);
-  if (targetContent) targetContent.classList.add('active');
-  
-  // I-set ang active class sa tamang button
-  const tabs = document.querySelectorAll('.dashboard-tabs .tab');
-  tabs.forEach(t => {
-    if (t.getAttribute('onclick').includes(tabName)) {
-      t.classList.add('active');
-    }
+  document.querySelectorAll('.dashboard-tabs .tab').forEach(t => {
+    if (t.getAttribute('onclick').includes(tabName)) t.classList.add('active');
   });
 }
 
 // ============================================================
-// 4. SIGNUP DYNAMIC DROPDOWNS
+// 4. DYNAMIC DROPDOWNS
 // ============================================================
 
 const courseData = {
-  'Health': {
-    courses: ['Nursing', 'Medical Technology', 'Pharmacy'],
-    areas: {
-      'Nursing': ['RHU San Jose', 'Lying-In Clinic', 'LGU San Jose'],
-      'Medical Technology': ['RHU San Jose', 'LGU San Jose'],
-      'Pharmacy': ['LGU San Jose', 'SHEBA']
-    }
-  },
-  'Education': {
-    courses: ['BSEd', 'BEEd'],
-    areas: {
-      'BSEd': ['School', 'LGU San Jose'],
-      'BEEd': ['School', 'LGU San Jose']
-    }
-  },
-  'Agriculture': {
-    courses: ['BS Agriculture'],
-    areas: {
-      'BS Agriculture': ['Department of Agriculture', 'LGU San Jose', 'SHEBA']
-    }
-  },
-  'Business': {
-    courses: ['Accountancy', 'Business Admin'],
-    areas: {
-      'Accountancy': ['LGU San Jose', 'Papay\'s Bakeshop'],
-      'Business Admin': ['LGU San Jose', 'Papay\'s Bakeshop', 'SHEBA']
-    }
-  },
-  'Engineering/IT': {
-    courses: ['Civil Engineering', 'IT'],
-    areas: {
-      'Civil Engineering': ['LGU San Jose', 'SHEBA'],
-      'IT': ['LGU San Jose', 'SHEBA']
-    }
-  }
+  'Health': { courses: ['Nursing', 'Medical Technology', 'Pharmacy'], areas: { 'Nursing': ['RHU San Jose', 'Lying-In Clinic', 'LGU San Jose'], 'Medical Technology': ['RHU San Jose', 'LGU San Jose'], 'Pharmacy': ['LGU San Jose', 'SHEBA'] } },
+  'Education': { courses: ['BSEd', 'BEEd'], areas: { 'BSEd': ['School', 'LGU San Jose'], 'BEEd': ['School', 'LGU San Jose'] } },
+  'Agriculture': { courses: ['BS Agriculture'], areas: { 'BS Agriculture': ['Department of Agriculture', 'LGU San Jose', 'SHEBA'] } },
+  'Business': { courses: ['Accountancy', 'Business Admin'], areas: { 'Accountancy': ['LGU San Jose', 'Papay\'s Bakeshop'], 'Business Admin': ['LGU San Jose', 'Papay\'s Bakeshop', 'SHEBA'] } },
+  'Engineering/IT': { courses: ['Civil Engineering', 'IT'], areas: { 'Civil Engineering': ['LGU San Jose', 'SHEBA'], 'IT': ['LGU San Jose', 'SHEBA'] } }
 };
 
 function updateCourses() {
@@ -228,10 +174,7 @@ function updateCourses() {
   
   if (field && courseData[field]) {
     courseData[field].courses.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.innerText = c;
-      courseSelect.appendChild(opt);
+      const opt = document.createElement('option'); opt.value = c; opt.innerText = c; courseSelect.appendChild(opt);
     });
   }
   courseSelect.onchange = updateAreas;
@@ -248,51 +191,30 @@ function updateAreas() {
   
   if (field && course && courseData[field].areas[course]) {
     courseData[field].areas[course].forEach(a => {
-      const opt = document.createElement('option');
-      opt.value = a;
-      opt.innerText = a;
-      areaSelect.appendChild(opt);
+      const opt = document.createElement('option'); opt.value = a; opt.innerText = a; areaSelect.appendChild(opt);
     });
   }
-  
-  areaSelect.onchange = () => {
-    if (areaSelect.value === 'School') {
-      schoolGroup.style.display = 'flex';
-    } else {
-      schoolGroup.style.display = 'none';
-    }
-  };
+  areaSelect.onchange = () => { schoolGroup.style.display = (areaSelect.value === 'School') ? 'flex' : 'none'; };
 }
 
 // ============================================================
-// 5. TIME IN / TIME OUT
+// 5. TIME IN / OUT
 // ============================================================
 
 async function timeIn() {
   const res = await callAPI('timeIn', { lrn: currentStudent.lrn });
-  if (res.success) {
-    alert(`Time In recorded: ${res.timeIn}`);
-    loadAttendance();
-  } else {
-    alert(res.error);
-  }
+  if (res.success) { alert(`Time In: ${res.timeIn}`); loadAttendance(); } else { alert(res.error); }
 }
 
 async function timeOut() {
   const res = await callAPI('timeOut', { lrn: currentStudent.lrn });
-  if (res.success) {
-    alert(`Time Out recorded: ${res.timeOut}\nTotal Hours: ${res.totalHours}`);
-    loadAttendance();
-  } else {
-    alert(res.error);
-  }
+  if (res.success) { alert(`Time Out: ${res.timeOut}\nTotal: ${res.totalHours}`); loadAttendance(); } else { alert(res.error); }
 }
 
 async function loadAttendance() {
   const res = await callAPI('getAttendance', { lrn: currentStudent.lrn });
   const list = document.getElementById('attendance-list');
   list.innerHTML = '';
-  
   let total = 0;
   
   if (res.success && res.records) {
@@ -303,12 +225,11 @@ async function loadAttendance() {
       list.appendChild(li);
     });
   }
-  
   document.getElementById('total-hours').innerText = total.toFixed(2) + ' hrs';
 }
 
 // ============================================================
-// 6. DAILY DIARY & CANVAS COMPRESSION
+// 6. DIARY & COMPRESSION
 // ============================================================
 
 function previewDiaryImages(e) {
@@ -317,10 +238,7 @@ function previewDiaryImages(e) {
   preview.innerHTML = '';
   diaryImagesBase64 = [];
   
-  if (files.length < 2) {
-    alert('Please select at least 2 pictures.');
-    return;
-  }
+  if (files.length < 2) { alert('Select at least 2 pictures.'); return; }
   
   files.forEach(file => {
     const reader = new FileReader();
@@ -329,13 +247,10 @@ function previewDiaryImages(e) {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 800;
-        const scale = MAX_WIDTH / img.width;
         canvas.width = MAX_WIDTH;
-        canvas.height = img.height * scale;
-        
+        canvas.height = img.height * (MAX_WIDTH / img.width);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
         diaryImagesBase64.push(compressedDataUrl.split(',')[1]);
         
@@ -352,121 +267,82 @@ function previewDiaryImages(e) {
 async function saveDiary() {
   const day = document.getElementById('diary-day').value;
   const text = document.getElementById('diary-text').value;
-  
-  if (!day || !text || diaryImagesBase64.length < 2) {
-    alert('Please fill in Day, Text, and at least 2 images.');
-    return;
-  }
+  if (!day || !text || diaryImagesBase64.length < 2) { alert('Fill Day, Text, and 2 images.'); return; }
   
   const btn = event.target;
-  btn.innerText = 'Saving...';
-  btn.disabled = true;
-  
+  btn.innerText = 'Saving...'; btn.disabled = true;
   let uploadedUrls = [];
   
   for (let i = 0; i < diaryImagesBase64.length; i++) {
     const res = await callAPI('uploadFile', {
-      lrn: currentStudent.lrn,
-      fileName: `Diary_Day${day}_Img${i+1}.jpg`,
-      mimeType: 'image/jpeg',
-      base64Data: diaryImagesBase64[i],
-      fileType: 'diary'
+      lrn: currentStudent.lrn, fileName: `Diary_Day${day}_Img${i+1}.jpg`, mimeType: 'image/jpeg', base64Data: diaryImagesBase64[i], fileType: 'diary'
     });
     if (res.success) uploadedUrls.push(res.fileUrl);
   }
   
-  const res = await callAPI('saveDiary', {
-    lrn: currentStudent.lrn,
-    dayNumber: day,
-    entryText: text,
-    imageUrls: uploadedUrls
-  });
-  
-  btn.innerText = 'Save Diary Entry';
-  btn.disabled = false;
+  const res = await callAPI('saveDiary', { lrn: currentStudent.lrn, dayNumber: day, entryText: text, imageUrls: uploadedUrls });
+  btn.innerText = 'Save Diary Entry'; btn.disabled = false;
   
   if (res.success) {
-    alert('Diary saved successfully!');
-    document.getElementById('diary-text').value = '';
-    diaryImagesBase64 = [];
-    document.getElementById('diary-preview').innerHTML = '';
-    document.getElementById('diary-images').value = '';
+    alert('Diary saved!'); document.getElementById('diary-text').value = ''; diaryImagesBase64 = [];
+    document.getElementById('diary-preview').innerHTML = ''; document.getElementById('diary-images').value = '';
     loadDiary();
-  } else {
-    alert(res.error);
-  }
+  } else { alert(res.error); }
 }
 
 async function loadDiary() {
   const res = await callAPI('getDiary', { lrn: currentStudent.lrn });
+  const scoreRes = await callAPI('getScores', { lrn: currentStudent.lrn });
   const list = document.getElementById('diary-list');
   list.innerHTML = '';
   
+  const scoresMap = {};
+  if (scoreRes.success && scoreRes.scores) {
+    scoreRes.scores.forEach(s => scoresMap[s.dayNumber] = s);
+  }
+
   if (res.success && res.entries) {
     res.entries.sort((a, b) => a.dayNumber - b.dayNumber).forEach(entry => {
       const li = document.createElement('li');
-      li.innerHTML = `<strong>Day ${entry.dayNumber} (${entry.date}):</strong> ${entry.entryText.substring(0, 50)}...`;
+      let scoreHtml = '<span style="color: gray; font-size: 12px;">(Not graded yet)</span>';
+      
+      if (scoresMap[entry.dayNumber]) {
+        const sc = scoresMap[entry.dayNumber];
+        scoreHtml = `<span style="color: #34c759; font-weight: bold;">Score: ${sc.score}/20</span>`;
+      }
+      
+      li.innerHTML = `<div><strong>Day ${entry.dayNumber}:</strong> ${entry.entryText.substring(0, 30)}...</div> ${scoreHtml}`;
       list.appendChild(li);
     });
   }
 }
 
 // ============================================================
-// 7. REQUIREMENTS (PDF Validation & Upload)
+// 7. REQUIREMENTS & WORD DOC
 // ============================================================
 
 function validatePDF(e) {
   const file = e.target.files[0];
   if (!file) return;
-  
-  if (file.type !== 'application/pdf') {
-    alert('Strictly PDF format only!');
-    e.target.value = '';
-    return;
-  }
-  
-  if (file.size > 5 * 1024 * 1024) {
-    alert('File is too large. Max 5MB only.');
-    e.target.value = '';
-    return;
-  }
+  if (file.type !== 'application/pdf') { alert('PDF only!'); e.target.value = ''; return; }
+  if (file.size > 5 * 1024 * 1024) { alert('Max 5MB only.'); e.target.value = ''; return; }
 }
 
 async function uploadRequirement() {
   const fileInput = document.getElementById('req-file');
   const file = fileInput.files[0];
-  
-  if (!file) {
-    alert('Please select a PDF file first.');
-    return;
-  }
+  if (!file) { alert('Select a PDF first.'); return; }
   
   const btn = event.target;
-  btn.innerText = 'Uploading...';
-  btn.disabled = true;
+  btn.innerText = 'Uploading...'; btn.disabled = true;
   
   const reader = new FileReader();
   reader.onload = async (evt) => {
     const base64Data = evt.target.result.split(',')[1];
+    const res = await callAPI('uploadFile', { lrn: currentStudent.lrn, fileName: file.name, mimeType: 'application/pdf', base64Data, fileType: 'requirement' });
+    btn.innerText = 'Upload PDF'; btn.disabled = false;
     
-    const res = await callAPI('uploadFile', {
-      lrn: currentStudent.lrn,
-      fileName: file.name,
-      mimeType: 'application/pdf',
-      base64Data: base64Data,
-      fileType: 'requirement'
-    });
-    
-    btn.innerText = 'Upload PDF';
-    btn.disabled = false;
-    
-    if (res.success) {
-      alert('PDF uploaded successfully!');
-      fileInput.value = '';
-      loadRequirements();
-    } else {
-      alert(res.error);
-    }
+    if (res.success) { alert('Uploaded!'); fileInput.value = ''; loadRequirements(); } else { alert(res.error); }
   };
   reader.readAsDataURL(file);
 }
@@ -475,7 +351,6 @@ async function loadRequirements() {
   const res = await callAPI('getRequirements', { lrn: currentStudent.lrn });
   const list = document.getElementById('requirements-list');
   list.innerHTML = '';
-  
   if (res.success && res.files) {
     res.files.forEach(f => {
       const li = document.createElement('li');
@@ -485,44 +360,35 @@ async function loadRequirements() {
   }
 }
 
-// ============================================================
-// 8. WORD DOCUMENT GENERATION
-// ============================================================
-
 async function generateWordDoc() {
   const res = await callAPI('getDiary', { lrn: currentStudent.lrn });
+  if (!res.success || !res.entries || res.entries.length === 0) { alert('No entries found.'); return; }
   
-  if (!res.success || !res.entries || res.entries.length === 0) {
-    alert('No diary entries found to generate Word document.');
-    return;
-  }
-  
-  let html = `
-    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-    <head><meta charset='utf-8'><title>Daily Diary</title></head>
-    <body style="font-family: Arial, sans-serif;">
-      <h1 style="text-align:center;">DAILY DIARY</h1>
-      <h3>Name: ${currentStudent.firstName} ${currentStudent.lastName}</h3>
-      <h3>LRN: ${currentStudent.lrn}</h3>
-      <hr>
-  `;
+  let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body style="font-family: Arial;">`;
+  html += `<h1 style="text-align:center;">DAILY DIARY</h1><h3>Name: ${currentStudent.firstName} ${currentStudent.lastName}</h3><h3>LRN: ${currentStudent.lrn}</h3><hr>`;
   
   res.entries.sort((a, b) => a.dayNumber - b.dayNumber).forEach(entry => {
-    html += `
-      <h4>Day ${entry.dayNumber} - ${entry.date}</h4>
-      <p>${entry.entryText}</p>
-      <p><i>(Attached pictures available in your Google Drive folder)</i></p>
-      <hr>
-    `;
+    html += `<h4>Day ${entry.dayNumber} - ${entry.date}</h4><p>${entry.entryText}</p><hr>`;
   });
-  
   html += `</body></html>`;
   
   const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `Diary_${currentStudent.lastName}_${currentStudent.firstName}.doc`;
-  a.click();
+  a.href = url; a.download = `Diary_${currentStudent.lastName}.doc`; a.click();
   URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// 8. ANNOUNCEMENTS
+// ============================================================
+
+async function loadAnnouncement() {
+  const res = await callAPI('getAnnouncement');
+  if (res.success && res.announcement) {
+    document.getElementById('student-announcement').classList.add('active');
+    document.getElementById('announcement-text').innerText = res.announcement;
+  } else {
+    document.getElementById('student-announcement').classList.remove('active');
+  }
 }
