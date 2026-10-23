@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   // Your Google Apps Script Web App URL
   // ⚠️ PALITAN ITO ng iyong aktwal na deployment URL
-  const GAS_URL = 'https://script.google.com/macros/s/PASTE_YOUR_DEPLOYMENT_ID_HERE/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxTVZuNsJvOoA0rutF5BcFsqCtZawrL7C78EzBjKRIjePltUxvBmxVPuORFBdWqegdP2Q/exec';
 
   try {
     if (req.method === 'GET') {
