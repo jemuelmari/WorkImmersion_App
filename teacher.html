@@ -35,8 +35,9 @@
         <button class="tab" onclick="switchTeachTab('masterlist')">Masterlist</button>
       </div>
 
+      <!-- ATTENDANCE TAB -->
       <div id="teach-attendance" class="dash-content active">
-        <div class="row" style="margin-bottom: 10px; align-items: flex-end;">
+        <div class="row-controls">
           <div class="input-group" style="flex: 2;">
             <label>Search Student (Name or LRN)</label>
             <input type="text" id="search-student" oninput="renderStudentList()" placeholder="Type to search...">
@@ -47,7 +48,7 @@
               <option value="All">All Sections</option>
             </select>
           </div>
-          <div style="display: flex; gap: 5px; margin-bottom: 2px;">
+          <div style="display: flex; gap: 5px;">
             <button class="btn-secondary" onclick="sortAlpha()">A-Z</button>
             <button class="btn-secondary" onclick="normalizeNames()">Fix Names</button>
           </div>
@@ -72,6 +73,7 @@
         </div>
       </div>
 
+      <!-- SCORES TAB -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
         <div class="row">
@@ -97,6 +99,7 @@
         <p id="score-msg" class="success-msg"></p>
       </div>
 
+      <!-- ANNOUNCEMENT TAB -->
       <div id="teach-announce" class="dash-content">
         <h3>Post Announcement to All Students</h3>
         <div class="input-group">
@@ -106,18 +109,19 @@
         <p id="announce-success" class="success-msg"></p>
       </div>
 
+      <!-- MASTERLIST TAB -->
       <div id="teach-masterlist" class="dash-content">
         <h3>Generate Masterlist (Word Document)</h3>
         <p class="note">Pumili ng Section para i-filter ang mga estudyante bago mag-generate.</p>
         
-        <div class="row" style="align-items: flex-end; margin-bottom: 20px;">
+        <div class="row-controls">
           <div class="input-group" style="flex: 2;">
             <label>Filter by Section</label>
             <select id="masterlist-section">
               <option value="All">All Sections</option>
             </select>
           </div>
-          <button class="btn-primary" onclick="generateMasterlistDocx()" style="flex: 1; height: 42px;">Download .doc</button>
+          <button class="btn-primary" onclick="generateMasterlistDocx()" style="height: 42px;">Download .doc</button>
         </div>
 
         <div style="overflow-x: auto;">
