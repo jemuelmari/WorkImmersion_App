@@ -309,7 +309,9 @@
       event.target.classList.add('active');
 
       if (tab === 'approvals') loadPendingTeachers();
-      if (tab === 'scores') loadTeacherData(); // Refresh data when entering Grade tab
+      if (tab === 'scores') {
+        loadTeacherData(); // Force refresh data when entering Grade tab
+      }
     }
 
     async function callAPI(action, payload = {}) {
