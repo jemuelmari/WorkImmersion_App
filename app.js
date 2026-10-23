@@ -297,18 +297,87 @@ async function loadRequirements() {
   }
 }
 
+// ============================================================
+// WORD DOCUMENT GENERATION (WITH IMAGES)
+// ============================================================
+
 async function generateWordDoc() {
   const res = await callAPI('getDiary', { lrn: currentStudent.lrn });
   if (!res.success || !res.entries || res.entries.length === 0) { alert('No entries found.'); return; }
   
-  let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body style="font-family: Arial;">`;
-  html += `<h1 style="text-align:center;">DAILY DIARY</h1><h3>Name: ${currentStudent.firstName} ${currentStudent.lastName}</h3><h3>LRN: ${currentStudent.lrn}</h3><hr>`;
-  res.entries.sort((a, b) => a.dayNumber - b.dayNumber).forEach(entry => { html += `<h4>Day ${entry.dayNumber} - ${entry.date}</h4><p>${entry.entryText}</p><hr>`; });
-  html += `</body></html>`;
+  const btn = event.target;
+  btn.innerText = 'Generating...'; btn.disabled = true;
+
+  let html = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head>
+      <meta charset='utf-8'>
+      <title>Daily Diary</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.5; }
+        h1, h2, h3 { text-align: center; }
+        .entry { margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
+        .images { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+        .images img { max-width: 300px; border: 1px solid #ddd; border-radius: 5px; }
+      </style>
+    </head>
+    <body>
+      <h1>DAILY DIARY</h1>
+      <h3>Name: ${currentStudent.firstName} ${currentStudent.lastName}</h3>
+      <h3>LRN: ${currentStudent.lrn}</h3>
+      <hr>
+  `;
+
+  // Loop through entries and fetch images
+  for (const entry of res.entries.sort((a, b) => a.dayNumber - b.dayNumber)) {
+    html += `
+      <div class="entry">
+        <h2>Day ${entry.dayNumber} - ${entry.date}</h2>
+        <p>${entry.entryText}</p>
+    `;
+
+    // Kunin ang mga larawan kung mayroon
+    if (entry.imageUrls && entry.imageUrls.length > 0) {
+      html += `<div class="images">`;
+      for (const url of entry.imageUrls) {
+        try {
+          // I-fetch ang larawan at gawing Base64
+          const imgRes = await fetch(url);
+          if (imgRes.ok) {
+            const blob = await imgRes.blob();
+            const reader = new FileReader();
+            
+            // Gumamit ng Promise para hintayin ang FileReader
+            const base64Data = await new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(blob);
+            });
+            
+            html += `<img src="${base64Data}" />`;
+          }
+        } catch (e) {
+          console.log("Failed to load image:", url);
+          // Fallback kung hindi ma-fetch
+          html += `<p><i>(Image not available. Link: <a href="${url}">${url}</a>)</i></p>`;
+        }
+      }
+      html += `</div>`;
+    }
+    
+    html += `</div>`;
+  }
   
+  html += `</body></html>`;
+
   const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-  const url = URL.createObjectURL(blob); const a = document.createElement('a');
-  a.href = url; a.download = `Diary_${currentStudent.lastName}.doc`; a.click(); URL.revokeObjectURL(url);
+  const url = URL.createObjectURL(blob); 
+  const a = document.createElement('a');
+  a.href = url; 
+  a.download = `Diary_${currentStudent.lastName}.doc`; 
+  a.click(); 
+  URL.revokeObjectURL(url);
+
+  btn.innerText = 'Download as Word'; btn.disabled = false;
 }
 
 // ============================================================
