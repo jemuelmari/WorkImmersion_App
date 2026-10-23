@@ -312,7 +312,7 @@ async function generateWordDoc() {
 }
 
 // ============================================================
-// ANNOUNCEMENTS & PROFILE (UPDATED)
+// ANNOUNCEMENTS & PROFILE
 // ============================================================
 
 async function loadAnnouncement() {
@@ -329,7 +329,7 @@ function showProfileModal() {
   document.getElementById('edit-firstname').value = currentStudent.firstName || '';
   document.getElementById('edit-middlename').value = currentStudent.middleName || '';
   document.getElementById('edit-sex').value = currentStudent.sex || 'Male';
-  document.getElementById('edit-section').value = currentStudent.section || '';
+  document.getElementById('edit-section').value = currentStudent.section || '12 GAS'; // Default fallback
   document.getElementById('edit-supervisor').value = currentStudent.supervisor || '';
   
   // 2. Set Field and trigger Course dropdown
@@ -410,7 +410,7 @@ async function saveProfile() {
   const firstName = document.getElementById('edit-firstname').value.trim();
   const middleName = document.getElementById('edit-middlename').value.trim();
   const sex = document.getElementById('edit-sex').value;
-  const section = document.getElementById('edit-section').value.trim();
+  const section = document.getElementById('edit-section').value;
   const field = document.getElementById('edit-field').value;
   const course = document.getElementById('edit-course').value;
   const deploymentArea = document.getElementById('edit-area').value;
