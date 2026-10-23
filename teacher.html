@@ -9,30 +9,68 @@
 </head>
 <body>
 
+  <!-- TEACHER AUTH SCREEN -->
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Enter password to access</p>
-      <div class="input-group">
-        <input type="password" id="teacher-pass" placeholder="Teacher Password">
+      <p class="subtitle">Work Immersion System</p>
+
+      <div class="tabs">
+        <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
+        <button id="tab-t-signup" class="tab" onclick="switchTeacherTab('signup')">Register</button>
       </div>
-      <button class="btn-primary" onclick="loginTeacher()">Access Dashboard</button>
-      <p id="teacher-error" class="error-msg"></p>
+
+      <!-- TEACHER LOGIN FORM -->
+      <form id="teacher-login-form" class="auth-form active" onsubmit="handleTeacherLogin(event)">
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="t-login-email" placeholder="teacher@email.com" required>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="t-login-password" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn-primary">Log In</button>
+        <p id="t-login-error" class="error-msg"></p>
+      </form>
+
+      <!-- TEACHER REGISTER FORM -->
+      <form id="teacher-signup-form" class="auth-form" onsubmit="handleTeacherRegister(event)">
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="t-signup-email" placeholder="teacher@email.com" required>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="t-signup-password" placeholder="Create a password" required>
+        </div>
+        <button type="submit" class="btn-primary">Create Account</button>
+        <p id="t-signup-error" class="error-msg" style="color: var(--success);"></p>
+      </form>
+      
+      <div style="text-align: center; margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px;">
+        <button class="btn-secondary" onclick="window.location.href='index.html'" style="font-size: 13px; width: 100%;">⬅ Back to Student Login</button>
+      </div>
     </div>
   </div>
 
+  <!-- TEACHER DASHBOARD SCREEN -->
   <div id="teacher-dash" class="screen">
     <div class="glass-card dashboard-card" style="max-width: 1100px;">
       <div class="dashboard-header">
-        <h2>Teacher Dashboard</h2>
+        <div>
+          <h2>Teacher Dashboard</h2>
+          <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
+        </div>
         <button class="btn-logout" onclick="logoutTeacher()">Logout</button>
       </div>
 
-      <div class="tabs dashboard-tabs">
+      <div class="tabs dashboard-tabs" id="teacher-tabs-nav">
         <button class="tab active" onclick="switchTeachTab('attendance')">Attendance</button>
         <button class="tab" onclick="switchTeachTab('scores')">Grade Diary</button>
         <button class="tab" onclick="switchTeachTab('announce')">Announcement</button>
         <button class="tab" onclick="switchTeachTab('masterlist')">Masterlist</button>
+        <button class="tab" id="tab-approvals" onclick="switchTeachTab('approvals')" style="display: none; color: var(--danger); font-weight: bold;">Approvals</button>
       </div>
 
       <!-- ATTENDANCE TAB -->
@@ -144,32 +182,111 @@
         </div>
       </div>
 
+      <!-- APPROVALS TAB (Admin Only) -->
+      <div id="teach-approvals" class="dash-content">
+        <h3>Pending Teacher Registrations</h3>
+        <p class="note">Ito ay makikita lamang ng Main Admin. Aprubahan ang mga bagong guro.</p>
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="approvals-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
-    const TEACHER_PASS = 'teacher123'; // ⚠️ PALITAN MO ITO
     const API_URL = '/api/proxy';
+    let currentTeacher = null;
     let allRecords = [];
     let studentMap = {};
     let sectionsList = new Set();
     let allStudents = [];
 
-    function loginTeacher() {
-      const pass = document.getElementById('teacher-pass').value;
-      if (pass === TEACHER_PASS) {
-        document.getElementById('teacher-auth').classList.remove('active');
-        document.getElementById('teacher-dash').classList.add('active');
-        loadTeacherData();
+    // ---- TEACHER AUTHENTICATION ----
+    function switchTeacherTab(tab) {
+      document.querySelectorAll('#teacher-auth .auth-form').forEach(f => f.classList.remove('active'));
+      document.querySelectorAll('#teacher-auth .tabs .tab').forEach(t => t.classList.remove('active'));
+      if (tab === 'login') {
+        document.getElementById('teacher-login-form').classList.add('active');
+        document.getElementById('tab-t-login').classList.add('active');
       } else {
-        document.getElementById('teacher-error').innerText = 'Incorrect password.';
+        document.getElementById('teacher-signup-form').classList.add('active');
+        document.getElementById('tab-t-signup').classList.add('active');
+      }
+    }
+
+    async function handleTeacherLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('t-login-email').value.trim();
+      const password = document.getElementById('t-login-password').value;
+      const errorEl = document.getElementById('t-login-error');
+      
+      errorEl.innerText = 'Logging in...';
+      const res = await callAPI('teacherLogin', { email, password });
+      
+      if (res.success) {
+        currentTeacher = res.teacher;
+        localStorage.setItem('wi_teacher', JSON.stringify(currentTeacher));
+        errorEl.innerText = '';
+        showTeacherDashboard();
+      } else {
+        errorEl.innerText = res.error;
+        errorEl.style.color = 'var(--danger)';
+      }
+    }
+
+    async function handleTeacherRegister(e) {
+      e.preventDefault();
+      const email = document.getElementById('t-signup-email').value.trim();
+      const password = document.getElementById('t-signup-password').value;
+      const msgEl = document.getElementById('t-signup-error');
+      
+      msgEl.innerText = 'Creating account...';
+      msgEl.style.color = 'gray';
+      const res = await callAPI('teacherRegister', { email, password });
+      
+      if (res.success) {
+        msgEl.innerText = res.message;
+        msgEl.style.color = 'var(--success)';
+        document.getElementById('teacher-signup-form').reset();
+      } else {
+        msgEl.innerText = res.error;
+        msgEl.style.color = 'var(--danger)';
       }
     }
 
     function logoutTeacher() {
+      currentTeacher = null;
+      localStorage.removeItem('wi_teacher');
       document.getElementById('teacher-dash').classList.remove('active');
       document.getElementById('teacher-auth').classList.add('active');
-      document.getElementById('teacher-pass').value = '';
+      document.getElementById('teacher-login-form').reset();
+    }
+
+    // ---- TEACHER DASHBOARD ----
+    function showTeacherDashboard() {
+      document.getElementById('teacher-auth').classList.remove('active');
+      document.getElementById('teacher-dash').classList.add('active');
+      document.getElementById('teacher-info').innerText = `Logged in as: ${currentTeacher.email} (${currentTeacher.role})`;
+      
+      // Kung Admin, ipakita ang Approvals tab
+      if (currentTeacher.role === 'Admin') {
+        document.getElementById('tab-approvals').style.display = 'block';
+      } else {
+        document.getElementById('tab-approvals').style.display = 'none';
+      }
+
+      switchTeachTab('attendance');
+      loadTeacherData();
     }
 
     function switchTeachTab(tab) {
@@ -177,6 +294,8 @@
       document.querySelectorAll('.dashboard-tabs .tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`teach-${tab}`).classList.add('active');
       event.target.classList.add('active');
+
+      if (tab === 'approvals') loadPendingTeachers();
     }
 
     async function callAPI(action, payload = {}) {
@@ -187,6 +306,46 @@
       return await res.json();
     }
 
+    async function loadPendingTeachers() {
+      const res = await callAPI('getPendingTeachers');
+      const tbody = document.querySelector('#approvals-table tbody');
+      tbody.innerHTML = '';
+      
+      if (res.success && res.pending) {
+        if (res.pending.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No pending registrations.</td></tr>';
+          return;
+        }
+        res.pending.forEach(t => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${t.email}</td>
+            <td>${t.role}</td>
+            <td>
+              <button class="btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="approveTeacher('${t.email}')">Approve</button>
+              <button class="btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="rejectTeacher('${t.email}')">Reject</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    async function approveTeacher(email) {
+      if(!confirm(`Approve ${email}?`)) return;
+      const res = await callAPI('approveTeacher', { email });
+      alert(res.message || res.error);
+      loadPendingTeachers();
+    }
+
+    async function rejectTeacher(email) {
+      if(!confirm(`Reject and remove ${email}?`)) return;
+      const res = await callAPI('rejectTeacher', { email });
+      alert(res.message || res.error);
+      loadPendingTeachers();
+    }
+
+    // ---- DATA LOADING ----
     async function loadTeacherData() {
       const attRes = await callAPI('getAllAttendance');
       const studRes = await callAPI('getSummary');
@@ -389,6 +548,15 @@
         setTimeout(() => document.getElementById('announce-success').innerText = '', 3000);
       }
     }
+
+    // Check kung may naka-save na teacher session
+    window.onload = () => {
+      const saved = localStorage.getItem('wi_teacher');
+      if (saved) {
+        currentTeacher = JSON.parse(saved);
+        showTeacherDashboard();
+      }
+    };
   </script>
 </body>
 </html>
