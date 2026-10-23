@@ -111,21 +111,17 @@
         </div>
       </div>
 
-      <!-- SCORES TAB (UPDATED WITH SEARCH DROPDOWN) -->
+      <!-- SCORES TAB (WITH SUBMISSION TRACKER) -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
         
         <div class="row">
-          <!-- Searchable Dropdown para sa Student Name -->
           <div class="input-group" style="flex: 2;">
             <label>Search & Select Student</label>
             <input type="text" id="search-grade-student" list="students-list" placeholder="Type student name or LRN..." oninput="onGradeStudentSelected()">
-            <datalist id="students-list">
-              <!-- Lalabas dito ang mga pangalan dynamically -->
-            </datalist>
+            <datalist id="students-list"></datalist>
           </div>
           
-          <!-- Hidden field para sa LRN (awtomatikong mapupuno) -->
           <div class="input-group" style="flex: 1;">
             <label>LRN (Auto-filled)</label>
             <input type="text" id="score-lrn" placeholder="Select student first" readonly style="background: #eee;">
@@ -137,6 +133,12 @@
           </div>
         </div>
         
+        <!-- SUBMISSION TRACKER -->
+        <div id="submission-tracker" style="display: none; background: rgba(0,122,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+          <h4 style="margin-bottom: 10px; font-size: 14px;">Diary Submission Status:</h4>
+          <div id="tracker-grid" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+        </div>
+
         <div class="rubric-box">
           <h4>Rubrics</h4>
           <div class="input-group"><label>Content & Relevance (Max 5)</label><input type="number" id="crit-1" max="5" min="0" placeholder="0-5"></div>
@@ -391,52 +393,75 @@
 
       renderStudentList();
       renderMasterlistPreview();
-      populateGradeDatalist(); // Tawagin ang bagong function
+      populateGradeDatalist();
     }
 
-    // ---- NEW: POPULATE STUDENT DATALIST PARA SA GRADING ----
     function populateGradeDatalist() {
       const datalist = document.getElementById('students-list');
       datalist.innerHTML = '';
       
-      // Ayusin alphabetically
       allStudents.sort((a, b) => a.lastName.localeCompare(b.lastName)).forEach(s => {
         const option = document.createElement('option');
-        // Value na ipapasok sa input ay "LastName, FirstName (LRN)"
         option.value = `${s.lastName}, ${s.firstName} (${s.lrn})`;
-        // Datalist attribute para awtomatikong mapuno ang hidden LRN field
         option.setAttribute('data-lrn', s.lrn);
         datalist.appendChild(option);
       });
     }
 
-    // ---- NEW: EVENT HANDLER KAPAG NAPILI ANG STUDENT ----
     function onGradeStudentSelected() {
       const input = document.getElementById('search-grade-student').value;
       const lrnInput = document.getElementById('score-lrn');
+      const tracker = document.getElementById('submission-tracker');
+      const trackerGrid = document.getElementById('tracker-grid');
       
-      // Hanapin sa datalist kung tugma ang napili
       const options = document.querySelectorAll('#students-list option');
-      let foundLrn = '';
+      let foundStudent = null;
       
       for (let opt of options) {
         if (opt.value === input) {
-          foundLrn = opt.getAttribute('data-lrn');
+          foundStudent = studentMap[opt.getAttribute('data-lrn')];
           break;
         }
       }
       
-      // Kung may nahanap, ilagay sa hidden input. Kung wala, i-blangko.
-      if (foundLrn) {
-        lrnInput.value = foundLrn;
+      if (foundStudent) {
+        lrnInput.value = foundStudent.lrn;
         lrnInput.style.background = 'white';
         lrnInput.style.color = 'var(--success)';
         lrnInput.style.fontWeight = 'bold';
+
+        // Ipakita ang Submission Tracker
+        tracker.style.display = 'block';
+        trackerGrid.innerHTML = '';
+        
+        for (let i = 1; i <= 10; i++) {
+          const dayStr = String(i);
+          const isSubmitted = foundStudent.diarySubmitted.includes(dayStr);
+          
+          const badge = document.createElement('div');
+          badge.style.padding = '5px 10px';
+          badge.style.borderRadius = '20px';
+          badge.style.fontSize = '12px';
+          badge.style.fontWeight = 'bold';
+          badge.innerText = `Day ${i}`;
+          
+          if (isSubmitted) {
+            badge.style.background = 'var(--success)';
+            badge.style.color = 'white';
+          } else {
+            badge.style.background = '#ffcccc';
+            badge.style.color = 'var(--danger)';
+            badge.style.border = '1px solid var(--danger)';
+          }
+          trackerGrid.appendChild(badge);
+        }
+
       } else {
         lrnInput.value = '';
         lrnInput.style.background = '#eee';
         lrnInput.style.color = 'inherit';
         lrnInput.style.fontWeight = 'normal';
+        tracker.style.display = 'none';
       }
     }
 
