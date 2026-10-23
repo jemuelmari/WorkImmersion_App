@@ -22,7 +22,7 @@
   </div>
 
   <div id="teacher-dash" class="screen">
-    <div class="glass-card dashboard-card" style="max-width: 900px;">
+    <div class="glass-card dashboard-card" style="max-width: 1000px;">
       <div class="dashboard-header">
         <h2>Teacher Dashboard</h2>
         <button class="btn-logout" onclick="logoutTeacher()">Logout</button>
@@ -36,6 +36,24 @@
 
       <!-- ATTENDANCE TAB -->
       <div id="teach-attendance" class="dash-content active">
+        <div class="row" style="margin-bottom: 10px; align-items: flex-end;">
+          <div class="input-group" style="flex: 2;">
+            <label>Search Student (Name or LRN)</label>
+            <input type="text" id="search-student" oninput="renderStudentList()" placeholder="Type to search...">
+          </div>
+          <div class="input-group" style="flex: 1;">
+            <label>Filter by Section</label>
+            <select id="filter-section" onchange="renderStudentList()">
+              <option value="All">All Sections</option>
+              <!-- Options will be loaded dynamically -->
+            </select>
+          </div>
+          <div style="display: flex; gap: 5px; margin-bottom: 2px;">
+            <button class="btn-secondary" onclick="sortAlpha()">A-Z</button>
+            <button class="btn-secondary" onclick="normalizeNames()">Fix Names</button>
+          </div>
+        </div>
+
         <h3>Daily Attendance Logs</h3>
         <div style="overflow-x: auto;">
           <table class="data-table" id="attendance-table">
@@ -43,6 +61,7 @@
               <tr>
                 <th>LRN</th>
                 <th>Name</th>
+                <th>Section</th>
                 <th>Date</th>
                 <th>Time In</th>
                 <th>Time Out</th>
@@ -109,15 +128,18 @@
   </div>
 
   <script>
-    const TEACHER_PASS = 'teacher123'; // ⚠️ PALITAN ITO NG SARILI MONG PASSWORD
+    const TEACHER_PASS = 'teacher123'; // Palitan mo ito ng sarili mong password
     const API_URL = '/api/proxy';
+    let allRecords = [];
+    let studentMap = {};
+    let sectionsList = new Set();
 
     function loginTeacher() {
       const pass = document.getElementById('teacher-pass').value;
       if (pass === TEACHER_PASS) {
         document.getElementById('teacher-auth').classList.remove('active');
         document.getElementById('teacher-dash').classList.add('active');
-        loadTeacherAttendance();
+        loadTeacherData();
       } else {
         document.getElementById('teacher-error').innerText = 'Incorrect password.';
       }
@@ -138,37 +160,97 @@
 
     async function callAPI(action, payload = {}) {
       const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action, ...payload })
       });
       return await res.json();
     }
 
-    async function loadTeacherAttendance() {
-      const res = await callAPI('getAllAttendance');
+    async function loadTeacherData() {
+      // Kunin lahat ng attendance
+      const attRes = await callAPI('getAllAttendance');
+      // Kunin lahat ng students (para sa pangalan at section)
+      const studRes = await callAPI('getSummary');
+      
+      allRecords = [];
+      studentMap = {};
+      sectionsList.clear();
+
+      if (studRes.success && studRes.summary) {
+        studRes.summary.forEach(s => {
+          studentMap[s.lrn] = s;
+          if (s.section) sectionsList.add(s.section);
+        });
+      }
+
+      if (attRes.success && attRes.records) {
+        allRecords = attRes.records.reverse();
+      }
+
+      // Populate Section Dropdown
+      const secFilter = document.getElementById('filter-section');
+      secFilter.innerHTML = '<option value="All">All Sections</option>';
+      Array.from(sectionsList).sort().forEach(sec => {
+        secFilter.innerHTML += `<option value="${sec}">${sec}</option>`;
+      });
+
+      renderStudentList();
+    }
+
+    function renderStudentList() {
+      const searchQuery = document.getElementById('search-student').value.toLowerCase();
+      const sectionFilter = document.getElementById('filter-section').value;
       const tbody = document.querySelector('#attendance-table tbody');
       tbody.innerHTML = '';
-      
-      if (res.success && res.records) {
-        const studentRes = await callAPI('getSummary');
-        const nameMap = {};
-        if (studentRes.success) {
-          studentRes.summary.forEach(s => nameMap[s.lrn] = `${s.lastName}, ${s.firstName}`);
-        }
 
-        res.records.reverse().forEach(r => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${r.lrn}</td>
-            <td>${nameMap[r.lrn] || 'Unknown'}</td>
-            <td>${r.date}</td>
-            <td>${r.timeIn || '-'}</td>
-            <td>${r.timeOut || '-'}</td>
-            <td>${r.totalHours || '0'} hrs</td>
-          `;
-          tbody.appendChild(tr);
-        });
+      let filtered = allRecords.filter(r => {
+        const stud = studentMap[r.lrn];
+        if (!stud) return false;
+        
+        // Search Filter
+        const fullName = `${stud.lastName}, ${stud.firstName}`.toLowerCase();
+        const matchSearch = fullName.includes(searchQuery) || r.lrn.toString().includes(searchQuery);
+        
+        // Section Filter
+        const matchSection = (sectionFilter === 'All') || (stud.section === sectionFilter);
+
+        return matchSearch && matchSection;
+      });
+
+      filtered.forEach(r => {
+        const stud = studentMap[r.lrn] || { lastName: 'Unknown', firstName: '', section: '-' };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.lrn}</td>
+          <td>${stud.lastName}, ${stud.firstName}</td>
+          <td>${stud.section}</td>
+          <td>${r.date}</td>
+          <td>${r.timeIn || '-'}</td>
+          <td>${r.timeOut || '-'}</td>
+          <td>${r.totalHours || '0'} hrs</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function sortAlpha() {
+      allRecords.sort((a, b) => {
+        const nameA = `${studentMap[a.lrn]?.lastName || ''} ${studentMap[a.lrn]?.firstName || ''}`.toLowerCase();
+        const nameB = `${studentMap[b.lrn]?.lastName || ''} ${studentMap[b.lrn]?.firstName || ''}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      renderStudentList();
+    }
+
+    async function normalizeNames() {
+      if (!confirm('Ito ay gagawing Title Case ang lahat ng pangalan ng estudyante (e.g. "dela cruz" -> "Dela Cruz"). Sigurado ka ba?')) return;
+      
+      const res = await callAPI('normalizeNames');
+      if (res.success) {
+        alert(res.message);
+        loadTeacherData(); // I-reload ang data
+      } else {
+        alert(res.error);
       }
     }
 
@@ -180,7 +262,6 @@
       const c3 = parseInt(document.getElementById('crit-3').value) || 0;
       const c4 = parseInt(document.getElementById('crit-4').value) || 0;
       const c5 = parseInt(document.getElementById('crit-5').value) || 0;
-      
       const total = c1 + c2 + c3 + c4 + c5;
       const criteria = { c1, c2, c3, c4, c5 };
       
