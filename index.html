@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
 </head>
@@ -102,6 +101,12 @@
   <!-- ================= STUDENT DASHBOARD SCREEN ================= -->
   <div id="dashboard-screen" class="screen">
     <div class="glass-card dashboard-card">
+      
+      <!-- ANNOUNCEMENT BANNER -->
+      <div id="student-announcement" class="announcement-banner">
+        <strong>📢 Announcement:</strong> <span id="announcement-text"></span>
+      </div>
+
       <div class="dashboard-header">
         <h2>Welcome, <span id="student-name">Student</span>!</h2>
         <button class="btn-logout" onclick="logout()">Logout</button>
@@ -147,6 +152,8 @@
         </div>
         <button class="btn-primary" onclick="saveDiary()">Save Diary Entry</button>
         <button class="btn-secondary" onclick="generateWordDoc()">Download as Word</button>
+        
+        <h4 style="margin-top: 20px;">My Diary Entries & Scores</h4>
         <ul id="diary-list" class="log-list"></ul>
       </div>
 
@@ -164,18 +171,11 @@
     </div>
   </div>
 
-    <script src="app.js"></script>
+  <script src="app.js"></script>
   <script>
-    // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => {
-            console.log('ServiceWorker registered:', registration);
-          })
-          .catch(error => {
-            console.log('ServiceWorker registration failed:', error);
-          });
+        navigator.serviceWorker.register('/sw.js');
       });
     }
   </script>
