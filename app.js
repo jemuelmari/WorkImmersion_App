@@ -70,6 +70,7 @@ async function handleSignup(e) {
   const lrn = document.getElementById('signup-lrn').value.trim();
   const lastName = document.getElementById('signup-lastname').value.trim();
   const firstName = document.getElementById('signup-firstname').value.trim();
+  const middleName = document.getElementById('signup-middlename').value.trim();
   const password = document.getElementById('signup-password').value;
   const sex = document.getElementById('signup-sex').value;
   const section = document.getElementById('signup-section').value;
@@ -82,7 +83,7 @@ async function handleSignup(e) {
   if (!lrn || !password || !lastName || !firstName || !sex || !section) { errorEl.innerText = 'Fill all required fields.'; return; }
 
   errorEl.innerText = 'Creating account...';
-  const res = await callAPI('signup', { lrn, lastName, firstName, password, field, course, deploymentArea, schoolName, sex, section });
+  const res = await callAPI('signup', { lrn, lastName, firstName, middleName, password, field, course, deploymentArea, schoolName, sex, section });
   
   if (res.success) {
     alert('Signup successful! Please log in.');
