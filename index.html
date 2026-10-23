@@ -9,11 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
 </head>
 <body>
 
-  <!-- ================= LOGIN / SIGNUP SCREEN ================= -->
+  <!-- LOGIN / SIGNUP -->
   <div id="auth-screen" class="screen active">
     <div class="glass-card auth-card">
       <h1>Work Immersion</h1>
@@ -58,6 +57,20 @@
           <label>Password</label>
           <input type="password" id="signup-password" placeholder="Create a password" required>
         </div>
+        <div class="row">
+          <div class="input-group">
+            <label>Sex</label>
+            <select id="signup-sex" required>
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Section</label>
+            <input type="text" id="signup-section" placeholder="e.g. STEM 12-A" required>
+          </div>
+        </div>
         <div class="input-group">
           <label>Field</label>
           <select id="signup-field" onchange="updateCourses()" required>
@@ -95,21 +108,27 @@
         <button type="submit" class="btn-primary">Create Account</button>
         <p id="signup-error" class="error-msg"></p>
       </form>
+      
+      <div style="text-align: center; margin-top: 15px;">
+        <button class="btn-secondary" onclick="goToTeacher()" style="font-size: 12px; padding: 8px 16px;">Teacher Portal</button>
+      </div>
     </div>
   </div>
 
-  <!-- ================= STUDENT DASHBOARD SCREEN ================= -->
+  <!-- STUDENT DASHBOARD -->
   <div id="dashboard-screen" class="screen">
     <div class="glass-card dashboard-card">
       
-      <!-- ANNOUNCEMENT BANNER -->
       <div id="student-announcement" class="announcement-banner">
         <strong>📢 Announcement:</strong> <span id="announcement-text"></span>
       </div>
 
       <div class="dashboard-header">
         <h2>Welcome, <span id="student-name">Student</span>!</h2>
-        <button class="btn-logout" onclick="logout()">Logout</button>
+        <div>
+          <button class="btn-secondary" onclick="showProfileModal()" style="padding: 8px 12px; font-size: 12px;">Edit Profile</button>
+          <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
       </div>
       
       <div class="tabs dashboard-tabs">
@@ -118,13 +137,12 @@
         <button class="tab" onclick="switchDashTab('upload')">Requirements</button>
       </div>
 
-      <!-- TAB 1: TIME IN/OUT -->
       <div id="dash-time" class="dash-content active">
         <h3>Log Your Attendance</h3>
         <div class="timer-display" id="current-datetime">--:--:--</div>
         <div class="button-row">
-          <button class="btn-success" id="btn-timein" onclick="timeIn()">Time In</button>
-          <button class="btn-danger" id="btn-timeout" onclick="timeOut()">Time Out</button>
+          <button class="btn-success" onclick="timeIn()">Time In</button>
+          <button class="btn-danger" onclick="timeOut()">Time Out</button>
         </div>
         <div class="summary-box">
           <h4>Your Total Hours</h4>
@@ -134,17 +152,10 @@
         <ul id="attendance-list" class="log-list"></ul>
       </div>
 
-      <!-- TAB 2: DAILY DIARY -->
       <div id="dash-diary" class="dash-content">
         <h3>Daily Diary</h3>
-        <div class="input-group">
-          <label>Day Number (1-10)</label>
-          <input type="number" id="diary-day" min="1" max="10" required>
-        </div>
-        <div class="input-group">
-          <label>Entry Text</label>
-          <textarea id="diary-text" rows="4" placeholder="What did you do today?"></textarea>
-        </div>
+        <div class="input-group"><label>Day Number (1-10)</label><input type="number" id="diary-day" min="1" max="10" required></div>
+        <div class="input-group"><label>Entry Text</label><textarea id="diary-text" rows="4" placeholder="What did you do today?"></textarea></div>
         <div class="input-group">
           <label>Upload Pictures (Min 2)</label>
           <input type="file" id="diary-images" accept="image/*" multiple onchange="previewDiaryImages(event)">
@@ -152,18 +163,14 @@
         </div>
         <button class="btn-primary" onclick="saveDiary()">Save Diary Entry</button>
         <button class="btn-secondary" onclick="generateWordDoc()">Download as Word</button>
-        
         <h4 style="margin-top: 20px;">My Diary Entries & Scores</h4>
         <ul id="diary-list" class="log-list"></ul>
       </div>
 
-      <!-- TAB 3: REQUIREMENTS UPLOAD -->
       <div id="dash-upload" class="dash-content">
         <h3>Upload Requirements</h3>
         <p class="note">Strictly PDF format only.</p>
-        <div class="input-group">
-          <input type="file" id="req-file" accept=".pdf" onchange="validatePDF(event)">
-        </div>
+        <div class="input-group"><input type="file" id="req-file" accept=".pdf" onchange="validatePDF(event)"></div>
         <button class="btn-primary" onclick="uploadRequirement()">Upload PDF</button>
         <ul id="requirements-list" class="log-list"></ul>
       </div>
@@ -171,13 +178,25 @@
     </div>
   </div>
 
+  <!-- EDIT PROFILE MODAL -->
+  <div id="profile-modal" class="modal">
+    <div class="glass-card modal-content">
+      <h3>Edit Profile</h3>
+      <p style="font-size: 12px; color: gray; margin-bottom: 15px;">Update your assigned immediate supervisor.</p>
+      <div class="input-group">
+        <label>Immediate Supervisor</label>
+        <input type="text" id="edit-supervisor" placeholder="Enter supervisor's full name">
+      </div>
+      <div class="button-row" style="margin-top: 15px;">
+        <button class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js');
-      });
-    }
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js')); }
   </script>
 </body>
 </html>
