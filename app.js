@@ -1,9 +1,8 @@
 // ============================================================
 // WORK IMMERSION ALL-IN-ONE APP
-// Frontend Logic (app.js)
+// Frontend Logic (app.js) - Updated Version
 // ============================================================
 
-// ⚠️ PALITAN ITO kung iba ang proxy route mo sa Vercel
 const API_URL = '/api/proxy';
 
 let currentStudent = null;
@@ -16,11 +15,14 @@ let diaryImagesBase64 = [];
 document.addEventListener('DOMContentLoaded', () => {
   startClock();
   
-  // Check if may naka-save na session
   const saved = localStorage.getItem('wi_student');
   if (saved) {
-    currentStudent = JSON.parse(saved);
-    showDashboard();
+    try {
+      currentStudent = JSON.parse(saved);
+      showDashboard();
+    } catch (e) {
+      localStorage.removeItem('wi_student');
+    }
   }
 });
 
@@ -33,6 +35,7 @@ function startClock() {
   }, 1000);
 }
 
+// Pinalakas natin ang API call para masigurong JSON ang bumabalik
 async function callAPI(action, payload = {}) {
   try {
     const res = await fetch(API_URL, {
@@ -40,10 +43,18 @@ async function callAPI(action, payload = {}) {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action, ...payload })
     });
+    
+    // Kunin ang text muna para makita kung may error
     const text = await res.text();
-    return JSON.parse(text);
+    
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("Server returned non-JSON:", text);
+      return { success: false, error: "Server error. Check your Apps Script deployment." };
+    }
   } catch (err) {
-    console.error('API Error:', err);
+    console.error('Network Error:', err);
     return { success: false, error: 'Network error. Please check your connection.' };
   }
 }
@@ -71,16 +82,23 @@ async function handleLogin(e) {
   const password = document.getElementById('login-password').value;
   const errorEl = document.getElementById('login-error');
   
+  if (!lrn || !password) {
+    errorEl.innerText = 'Please enter both LRN and Password.';
+    return;
+  }
+
   errorEl.innerText = 'Logging in...';
   
-  const res = await callAPI('login', { lrn, password });
+  // Siguraduhing string ang LRN bago ipadala
+  const res = await callAPI('login', { lrn: String(lrn), password: String(password) });
   
-  if (res.success) {
+  if (res.success && res.student) {
     currentStudent = res.student;
     localStorage.setItem('wi_student', JSON.stringify(currentStudent));
+    errorEl.innerText = '';
     showDashboard();
   } else {
-    errorEl.innerText = res.error || 'Login failed.';
+    errorEl.innerText = res.error || 'Login failed. Please check your credentials.';
   }
 }
 
@@ -96,13 +114,21 @@ async function handleSignup(e) {
   const schoolName = document.getElementById('signup-school').value;
   
   const errorEl = document.getElementById('signup-error');
+  
+  if (!lrn || !password || !lastName || !firstName) {
+    errorEl.innerText = 'Please fill in all required fields.';
+    return;
+  }
+
   errorEl.innerText = 'Creating account...';
   
   const res = await callAPI('signup', { lrn, lastName, firstName, password, field, course, deploymentArea, schoolName });
   
   if (res.success) {
-    alert('Signup successful! Please log in.');
+    alert('Signup successful! You can now log in.');
     switchAuthTab('login');
+    // Auto-fill LRN sa login form para madali
+    document.getElementById('login-lrn').value = lrn;
     errorEl.innerText = '';
   } else {
     errorEl.innerText = res.error || 'Signup failed.';
@@ -126,6 +152,8 @@ function showDashboard() {
   document.getElementById('dashboard-screen').classList.add('active');
   document.getElementById('student-name').innerText = `${currentStudent.firstName} ${currentStudent.lastName}`;
   
+  // Reset to first tab
+  switchDashTab('time');
   loadAttendance();
   loadDiary();
   loadRequirements();
@@ -135,12 +163,20 @@ function switchDashTab(tabName) {
   document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.dashboard-tabs .tab').forEach(t => t.classList.remove('active'));
   
-  document.getElementById(`dash-${tabName}`).classList.add('active');
-  event.target.classList.add('active');
+  const targetContent = document.getElementById(`dash-${tabName}`);
+  if (targetContent) targetContent.classList.add('active');
+  
+  // I-set ang active class sa tamang button
+  const tabs = document.querySelectorAll('.dashboard-tabs .tab');
+  tabs.forEach(t => {
+    if (t.getAttribute('onclick').includes(tabName)) {
+      t.classList.add('active');
+    }
+  });
 }
 
 // ============================================================
-// 4. SIGNUP DYNAMIC DROPDOWNS (Field -> Course -> Area)
+// 4. SIGNUP DYNAMIC DROPDOWNS
 // ============================================================
 
 const courseData = {
@@ -291,7 +327,6 @@ function previewDiaryImages(e) {
     reader.onload = (evt) => {
       const img = new Image();
       img.onload = () => {
-        // COMPRESS: Max 800px width, 70% quality
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 800;
         const scale = MAX_WIDTH / img.width;
@@ -304,7 +339,6 @@ function previewDiaryImages(e) {
         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
         diaryImagesBase64.push(compressedDataUrl.split(',')[1]);
         
-        // Show preview
         const previewImg = document.createElement('img');
         previewImg.src = compressedDataUrl;
         preview.appendChild(previewImg);
@@ -330,7 +364,6 @@ async function saveDiary() {
   
   let uploadedUrls = [];
   
-  // Upload images first
   for (let i = 0; i < diaryImagesBase64.length; i++) {
     const res = await callAPI('uploadFile', {
       lrn: currentStudent.lrn,
@@ -342,7 +375,6 @@ async function saveDiary() {
     if (res.success) uploadedUrls.push(res.fileUrl);
   }
   
-  // Save diary entry
   const res = await callAPI('saveDiary', {
     lrn: currentStudent.lrn,
     dayNumber: day,
@@ -358,6 +390,7 @@ async function saveDiary() {
     document.getElementById('diary-text').value = '';
     diaryImagesBase64 = [];
     document.getElementById('diary-preview').innerHTML = '';
+    document.getElementById('diary-images').value = '';
     loadDiary();
   } else {
     alert(res.error);
@@ -453,7 +486,7 @@ async function loadRequirements() {
 }
 
 // ============================================================
-// 8. WORD DOCUMENT GENERATION (HTML to .doc)
+// 8. WORD DOCUMENT GENERATION
 // ============================================================
 
 async function generateWordDoc() {
