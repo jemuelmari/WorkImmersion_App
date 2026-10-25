@@ -28,13 +28,32 @@ body {
 .auth-card h1 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 5px; }
 .subtitle { text-align: center; color: var(--text-sub); margin-bottom: 25px; font-size: 14px; }
 
-.tabs { display: flex; background: rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 4px; margin-bottom: 20px; overflow-x: auto; }
-.tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.3s ease; font-size: 13px; white-space: nowrap;}
+/* DASHBOARD HEADER */
+.dashboard-card { max-width: 1100px; width: 100%; position: relative; }
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+/* STICKY TABS (Fixed sa Taas) */
+.tabs { display: flex; background: rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 4px; margin-bottom: 20px; overflow-x: auto; white-space: nowrap; }
+.dashboard-tabs {
+  position: -webkit-sticky; /* Para sa Safari */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin: 0 -30px 20px -30px;
+  padding: 10px 30px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.3s ease; font-size: 13px; }
 .tab.active { background: white; color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
+/* FORMS */
 .auth-form { display: none; flex-direction: column; gap: 15px; }
 .auth-form.active { display: flex; }
-
 .input-group { display: flex; flex-direction: column; gap: 6px; }
 .input-group label { font-size: 12px; font-weight: 600; color: var(--text-sub); margin-left: 4px; }
 .input-group input, .input-group select, .input-group textarea {
@@ -54,36 +73,16 @@ body {
 .btn-danger { background: var(--danger); color: white; }
 .btn-secondary { background: rgba(0,0,0,0.1); color: var(--text-main); }
 .btn-logout { background: transparent; color: var(--danger); font-size: 14px; padding: 8px 12px; }
-.btn-primary:hover, .btn-success:hover, .btn-danger:hover { transform: scale(0.98); opacity: 0.9; }
 
-/* DASHBOARD */
-.dashboard-card { max-width: 1100px; width: 100%; position: relative; }
-.dashboard-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-
-/* STICKY TABS */
-.dashboard-tabs {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  margin: 0 -30px 20px -30px;
-  padding: 10px 30px;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  border-top: 1px solid rgba(0,0,0,0.05);
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
+/* DASHBOARD CONTENT */
 .dash-content { display: none; flex-direction: column; gap: 15px; padding-bottom: 50px; }
 .dash-content.active { display: flex; }
 
-/* DATA TABLE RESPONSIVE */
-.data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: rgba(255, 255, 255, 0.6); border-radius: 12px; overflow: hidden; }
+/* DATA TABLES (Responsive) */
+.data-table-container { overflow-x: auto; width: 100%; margin-top: 15px; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+.data-table { width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.6); min-width: 600px; /* Para may scroll sa cellphone */ }
 .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; }
 .data-table th { background: rgba(0, 122, 255, 0.1); color: var(--primary); font-weight: 600; }
-.data-table-container { overflow-x: auto; width: 100%; margin-top: 15px; -webkit-overflow-scrolling: touch; border-radius: 12px; }
 
 /* UI COMPONENTS */
 .timer-display { font-size: 42px; font-weight: 700; text-align: center; letter-spacing: 2px; color: var(--primary); margin: 10px 0; }
@@ -115,8 +114,3 @@ body {
   padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;
 }
 .announcement-banner.active { display: block; }
-
-/* Diary Viewer Modal Specifics */
-#diary-modal .glass-card { max-width: 800px; width: 90%; }
-.diary-entry-block { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-.diary-entry-block img { max-width: 100%; max-height: 200px; object-fit: contain; margin: 5px; border-radius: 8px; border: 1px solid #ddd; }
