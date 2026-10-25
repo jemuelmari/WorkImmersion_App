@@ -23,44 +23,21 @@
         <button id="tab-signup" class="tab" onclick="switchAuthTab('signup')">Sign Up</button>
       </div>
 
-      <!-- LOGIN FORM -->
       <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
-        <div class="input-group">
-          <label>LRN</label>
-          <input type="text" id="login-lrn" placeholder="Enter your LRN" required>
-        </div>
-        <div class="input-group">
-          <label>Password</label>
-          <input type="password" id="login-password" placeholder="Enter password" required>
-        </div>
+        <div class="input-group"><label>LRN</label><input type="text" id="login-lrn" placeholder="Enter your LRN" required></div>
+        <div class="input-group"><label>Password</label><input type="password" id="login-password" placeholder="Enter password" required></div>
         <button type="submit" class="btn-primary">Log In</button>
         <p id="login-error" class="error-msg"></p>
       </form>
 
-      <!-- SIGNUP FORM -->
       <form id="signup-form" class="auth-form" onsubmit="handleSignup(event)">
-        <div class="input-group">
-          <label>LRN</label>
-          <input type="text" id="signup-lrn" placeholder="Enter your LRN" required>
-        </div>
+        <div class="input-group"><label>LRN</label><input type="text" id="signup-lrn" placeholder="Enter your LRN" required></div>
         <div class="row">
-          <div class="input-group">
-            <label>Last Name</label>
-            <input type="text" id="signup-lastname" placeholder="Last Name" required>
-          </div>
-          <div class="input-group">
-            <label>First Name</label>
-            <input type="text" id="signup-firstname" placeholder="First Name" required>
-          </div>
+          <div class="input-group"><label>Last Name</label><input type="text" id="signup-lastname" placeholder="Last Name" required></div>
+          <div class="input-group"><label>First Name</label><input type="text" id="signup-firstname" placeholder="First Name" required></div>
         </div>
-        <div class="input-group">
-          <label>Middle Name (Optional)</label>
-          <input type="text" id="signup-middlename" placeholder="Middle Name">
-        </div>
-        <div class="input-group">
-          <label>Password</label>
-          <input type="password" id="signup-password" placeholder="Create a password" required>
-        </div>
+        <div class="input-group"><label>Middle Name (Optional)</label><input type="text" id="signup-middlename" placeholder="Middle Name"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="signup-password" placeholder="Create a password" required></div>
         <div class="row">
           <div class="input-group">
             <label>Sex</label>
@@ -90,18 +67,8 @@
             <option value="Engineering/IT">Engineering / IT</option>
           </select>
         </div>
-        <div class="input-group">
-          <label>Course</label>
-          <select id="signup-course" required>
-            <option value="">Select Field First</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label>Deployment Area</label>
-          <select id="signup-area" required>
-            <option value="">Select Course First</option>
-          </select>
-        </div>
+        <div class="input-group"><label>Course</label><select id="signup-course" required><option value="">Select Field First</option></select></div>
+        <div class="input-group"><label>Deployment Area</label><select id="signup-area" required><option value="">Select Course First</option></select></div>
         <div class="input-group" id="school-group" style="display: none;">
           <label>School</label>
           <select id="signup-school">
@@ -145,7 +112,6 @@
         <button class="tab" onclick="switchDashTab('upload')">Requirements</button>
       </div>
 
-      <!-- TIME IN/OUT TAB -->
       <div id="dash-time" class="dash-content active">
         <h3>Log Your Attendance</h3>
         <div class="timer-display" id="current-datetime">--:--:--</div>
@@ -161,7 +127,6 @@
         <ul id="attendance-list" class="log-list"></ul>
       </div>
 
-      <!-- DIARY TAB -->
       <div id="dash-diary" class="dash-content">
         <h3>Daily Diary</h3>
         <div class="input-group"><label>Day Number (1-10)</label><input type="number" id="diary-day" min="1" max="10" required></div>
@@ -177,7 +142,6 @@
         <ul id="diary-list" class="log-list"></ul>
       </div>
 
-      <!-- REQUIREMENTS TAB -->
       <div id="dash-upload" class="dash-content">
         <h3>Upload Requirements</h3>
         <p class="note">Strictly PDF format only.</p>
@@ -194,30 +158,15 @@
     <div class="glass-card modal-content" style="max-height: 90vh; overflow-y: auto; max-width: 500px;">
       <h3>Edit Profile</h3>
       <p style="font-size: 12px; color: gray; margin-bottom: 15px;">Update your personal details and supervisor.</p>
-      
       <div class="row">
-        <div class="input-group">
-          <label>Last Name</label>
-          <input type="text" id="edit-lastname" required>
-        </div>
-        <div class="input-group">
-          <label>First Name</label>
-          <input type="text" id="edit-firstname" required>
-        </div>
+        <div class="input-group"><label>Last Name</label><input type="text" id="edit-lastname" required></div>
+        <div class="input-group"><label>First Name</label><input type="text" id="edit-firstname" required></div>
       </div>
-      
-      <div class="input-group">
-        <label>Middle Name</label>
-        <input type="text" id="edit-middlename">
-      </div>
-
+      <div class="input-group"><label>Middle Name</label><input type="text" id="edit-middlename"></div>
       <div class="row">
         <div class="input-group">
           <label>Sex</label>
-          <select id="edit-sex" required>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
+          <select id="edit-sex" required><option value="Male">Male</option><option value="Female">Female</option></select>
         </div>
         <div class="input-group">
           <label>Section</label>
@@ -227,7 +176,6 @@
           </select>
         </div>
       </div>
-
       <div class="input-group">
         <label>Field</label>
         <select id="edit-field" onchange="updateEditCourses()" required>
@@ -238,17 +186,8 @@
           <option value="Engineering/IT">Engineering / IT</option>
         </select>
       </div>
-
-      <div class="input-group">
-        <label>Course</label>
-        <select id="edit-course" onchange="updateEditAreas()" required></select>
-      </div>
-
-      <div class="input-group">
-        <label>Deployment Area</label>
-        <select id="edit-area" onchange="toggleEditSchool()" required></select>
-      </div>
-
+      <div class="input-group"><label>Course</label><select id="edit-course" onchange="updateEditAreas()" required></select></div>
+      <div class="input-group"><label>Deployment Area</label><select id="edit-area" onchange="toggleEditSchool()" required></select></div>
       <div class="input-group" id="edit-school-group" style="display: none;">
         <label>School</label>
         <select id="edit-school">
@@ -260,12 +199,7 @@
           <option value="Sta. Cruz Elementary School">Sta. Cruz Elementary School</option>
         </select>
       </div>
-
-      <div class="input-group">
-        <label>Immediate Supervisor</label>
-        <input type="text" id="edit-supervisor" placeholder="Enter supervisor's full name">
-      </div>
-
+      <div class="input-group"><label>Immediate Supervisor</label><input type="text" id="edit-supervisor" placeholder="Enter supervisor's full name"></div>
       <div class="button-row" style="margin-top: 15px;">
         <button class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
         <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
