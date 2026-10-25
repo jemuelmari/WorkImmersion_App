@@ -13,7 +13,7 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v6.1)</p>
+      <p class="subtitle">Work Immersion System (v6.2)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -48,7 +48,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v6.1)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v6.2)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -195,7 +195,6 @@
   </div>
 
   <script>
-    // ---- SCRIPT LOGIC (Pareho sa binigay ko kanina) ----
     const API_URL = '/api/proxy';
     let currentTeacher = null;
     let allRecords = [];
@@ -204,6 +203,7 @@
     let allStudents = [];
     let selectedStudentLrn = '';
 
+    // ---- AUTH ----
     function switchTeacherTab(tab) {
       document.querySelectorAll('#teacher-auth .auth-form').forEach(f => f.classList.remove('active'));
       document.querySelectorAll('#teacher-auth .tabs .tab').forEach(t => t.classList.remove('active'));
@@ -244,6 +244,7 @@
       document.getElementById('teacher-login-form').reset();
     }
 
+    // ---- DASHBOARD ----
     function showTeacherDashboard() {
       document.getElementById('teacher-auth').classList.remove('active');
       document.getElementById('teacher-dash').classList.add('active');
@@ -472,6 +473,21 @@
     async function rejectTeacher(email) { if(!confirm(`Reject ${email}?`)) return; const res = await callAPI('rejectTeacher', { email }); alert(res.message || res.error); loadPendingTeachers(); }
 
     window.onload = () => { const saved = localStorage.getItem('wi_teacher'); if (saved) { currentTeacher = JSON.parse(saved); showTeacherDashboard(); } };
+
+    // ---- AUTO-UPDATE SCRIPT FOR PWA ----
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('New content is available; please refresh.');
+              window.location.reload(); 
+            }
+          });
+        });
+      });
+    }
   </script>
 </body>
 </html>
