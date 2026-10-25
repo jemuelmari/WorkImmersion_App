@@ -3,16 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Portal - Work Immersion (v8.1)</title>
+  <title>Teacher Portal - Work Immersion (v8.2)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Custom Layout para sa Grading Area */
+    .grading-container {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap; /* Para maging 1-column sa cellphone */
+      margin-top: 15px;
+    }
+    .diary-viewer {
+      flex: 1.5; /* Mas malaki ang diary side */
+      min-width: 300px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(0,0,0,0.1);
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .grading-panel {
+      flex: 1;
+      min-width: 280px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(0,0,0,0.1);
+      position: sticky;
+      top: 20px;
+    }
+    .diary-image-container img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+    }
+    .rubric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .rubric-row input {
+      width: 80px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
+  <!-- TEACHER AUTH SCREEN -->
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v8.1)</p>
+      <p class="subtitle">Work Immersion System (v8.2)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -39,13 +87,14 @@
     </div>
   </div>
 
+  <!-- TEACHER DASHBOARD SCREEN -->
   <div id="teacher-dash" class="screen">
-    <div class="glass-card dashboard-card" style="max-width: 1100px;">
+    <div class="glass-card dashboard-card" style="max-width: 1200px;">
       
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v8.1)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v8.2)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -72,6 +121,7 @@
         <button class="tab" id="tab-approvals" onclick="switchTeachTab('approvals', event)" style="display: none; color: var(--danger); font-weight: bold;">Approvals</button>
       </div>
 
+      <!-- ATTENDANCE TAB -->
       <div id="teach-attendance" class="dash-content active">
         <div class="row-controls">
           <div class="input-group" style="flex: 2;">
@@ -84,10 +134,6 @@
               <option value="All">All Sections</option>
             </select>
           </div>
-          <div style="display: flex; gap: 5px;">
-            <button class="btn-secondary" onclick="sortAlpha()">A-Z</button>
-            <button class="btn-secondary" onclick="normalizeNames()">Fix Names</button>
-          </div>
         </div>
 
         <h3>Daily Attendance Logs</h3>
@@ -99,9 +145,8 @@
         </div>
       </div>
 
+      <!-- SCORES TAB (SPLIT SCREEN DESIGN) -->
       <div id="teach-scores" class="dash-content">
-        <h3>Grade Student Diary (Max 20 Points)</h3>
-        
         <div class="row" style="margin-bottom: 15px;">
           <div class="input-group" style="flex: 1;">
             <label>Filter by Section</label>
@@ -117,32 +162,56 @@
           </div>
         </div>
 
-        <div id="grading-area" style="display: none; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
-            <div>
-              <h4 id="grading-student-name" style="color: var(--primary); font-size: 18px; margin-bottom: 5px;"></h4>
-              <p style="font-size: 12px; color: gray;" id="grading-student-info"></p>
-            </div>
-            <button class="btn-secondary" onclick="generateStudentWordDoc()">Download Diary (Word)</button>
+        <div id="grading-area" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 id="grading-student-name" style="color: var(--primary);"></h3>
+            <button class="btn-secondary" onclick="generateStudentWordDoc()">Download Full Diary (Word)</button>
           </div>
-          
-          <div style="margin-top: 15px;">
-            <label style="font-weight: bold; font-size: 14px;">Diary Entries & Pictures</label>
-            <div id="diary-entries-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 300px; overflow-y: auto; padding-right: 10px;"></div>
-          </div>
+          <p style="font-size: 12px; color: gray; margin-bottom: 15px;" id="grading-student-info"></p>
 
-          <div class="rubric-box" style="margin-top: 20px;">
-            <h4>Grading Rubrics (Per Day)</h4>
-            <div class="row">
-              <div class="input-group"><label>Day Number</label><input type="number" id="score-day" min="1" max="10" placeholder="1-10"></div>
-              <div class="input-group"><label>Score (0-20)</label><input type="number" id="score-total" max="20" min="0" placeholder="Total Score"></div>
+          <!-- SPLIT LAYOUT -->
+          <div class="grading-container">
+            
+            <!-- KALIWA: DIARY VIEWER -->
+            <div class="diary-viewer">
+              <h4 style="margin-bottom: 10px; color: gray; font-size: 12px; text-transform: uppercase;">Student Submission</h4>
+              <div id="diary-entries-list"></div>
             </div>
+
+            <!-- KANAN: GRADING PANEL -->
+            <div class="grading-panel">
+              <h4 style="margin-bottom: 15px; color: var(--primary);">Rubric Grading</h4>
+              
+              <div class="input-group" style="margin-bottom: 15px;">
+                <label>Select Day to Grade</label>
+                <select id="score-day" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                  <option value="1">Day 1</option>
+                  <option value="2">Day 2</option>
+                  <option value="3">Day 3</option>
+                  <option value="4">Day 4</option>
+                  <option value="5">Day 5</option>
+                  <option value="6">Day 6</option>
+                  <option value="7">Day 7</option>
+                  <option value="8">Day 8</option>
+                  <option value="9">Day 9</option>
+                  <option value="10">Day 10</option>
+                </select>
+              </div>
+
+              <div class="input-group" style="margin-bottom: 15px;">
+                <label>Total Score (0-20)</label>
+                <input type="number" id="score-total" max="20" min="0" placeholder="Enter score" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px;">
+              </div>
+
+              <button class="btn-primary" onclick="submitScore()" style="width: 100%; padding: 15px;">Submit Score</button>
+              <p id="score-msg" class="success-msg"></p>
+            </div>
+
           </div>
-          <button class="btn-primary" onclick="submitScore()" style="width: 100%;">Submit Score for this Day</button>
-          <p id="score-msg" class="success-msg"></p>
         </div>
       </div>
 
+      <!-- ANNOUNCEMENT TAB -->
       <div id="teach-announce" class="dash-content">
         <h3>Post Announcement to All Students</h3>
         <div class="input-group"><textarea id="announce-text" rows="5" placeholder="Type your announcement here..."></textarea></div>
@@ -150,6 +219,7 @@
         <p id="announce-success" class="success-msg"></p>
       </div>
 
+      <!-- MASTERLIST TAB -->
       <div id="teach-masterlist" class="dash-content">
         <h3>Generate Masterlist (Word Document)</h3>
         <p class="note">Pumili ng Section para i-filter bago mag-generate.</p>
@@ -172,6 +242,7 @@
         </div>
       </div>
 
+      <!-- APPROVALS TAB -->
       <div id="teach-approvals" class="dash-content">
         <h3>Pending Teacher Registrations</h3>
         <div class="data-table-container">
@@ -280,7 +351,6 @@
       allRecords = data.records || [];
       allStudents = data.summary || [];
       
-      // I-reset ang studentMap at sectionsList
       studentMap = {}; 
       sectionsList.clear();
       
@@ -289,7 +359,6 @@
         if (s.section) sectionsList.add(s.section); 
       });
 
-      // I-populate ang mga dropdown ng section
       ['filter-section', 'masterlist-section', 'grade-section-filter'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -303,7 +372,6 @@
       renderStudentList();
       renderMasterlistPreview();
       
-      // Tiyaking naka-load na ang allStudents bago tawagin ang dropdown function
       if (allStudents.length > 0) updateGradeDropdown();
       
       const badge = document.getElementById('notif-badge');
@@ -324,7 +392,7 @@
       else { panel.style.display = 'none'; }
     }
 
-    // ---- GRADE DIARY DROPDOWNS ----
+    // ---- GRADE DIARY LOGIC ----
     function updateGradeDropdown() {
       const secFilter = document.getElementById('grade-section-filter').value;
       const dropdown = document.getElementById('grade-student-dropdown');
@@ -358,24 +426,34 @@
 
       entriesList.innerHTML = '';
       if (student.diaryEntries && student.diaryEntries.length > 0) {
+        // I-sort pataas para sa Day 1, Day 2, etc.
         student.diaryEntries.sort((a,b) => a.dayNumber - b.dayNumber).forEach(entry => {
           const div = document.createElement('div');
-          div.className = 'diary-entry-block';
-          let imgsHtml = entry.imageUrls.map(url => `<a href="${url}" target="_blank"><img src="${url}" onerror="this.style.display='none'"></a>`).join('');
+          div.style.marginBottom = '20px';
+          div.style.borderBottom = '1px solid #eee';
+          div.style.paddingBottom = '15px';
+          
+          let imgsHtml = entry.imageUrls.map(url => 
+            `<a href="${url}" target="_blank">
+               <img src="${url}" style="max-width: 100%; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px;" onerror="this.style.display='none'">
+             </a>`
+          ).join('');
+          
           let score = student.scores[entry.dayNumber] ? student.scores[entry.dayNumber] + '/20' : 'Not Graded';
+          let scoreColor = student.scores[entry.dayNumber] ? 'var(--success)' : '#ccc';
           
           div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <strong>Day ${entry.dayNumber} (${entry.date})</strong>
-              <span style="background: ${student.scores[entry.dayNumber] ? 'var(--success)' : '#ccc'}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">Score: ${score}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="font-size: 16px;">Day ${entry.dayNumber} <span style="font-size:12px; color:gray; font-weight:normal;">(${entry.date})</span></h4>
+              <span style="background: ${scoreColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">Score: ${score}</span>
             </div>
-            <p style="font-size: 13px; margin-bottom: 8px;">${entry.entryText}</p>
-            <div style="display: flex; gap: 5px; flex-wrap: wrap;">${imgsHtml}</div>
+            <p style="font-size: 14px; line-height: 1.5; margin-bottom: 10px;">${entry.entryText}</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">${imgsHtml}</div>
           `;
           entriesList.appendChild(div);
         });
       } else {
-        entriesList.innerHTML = '<p style="color:gray; font-size:13px;">No diary entries submitted yet.</p>';
+        entriesList.innerHTML = '<p style="color:gray; text-align:center; padding: 20px;">No diary entries submitted yet.</p>';
       }
     }
 
@@ -393,13 +471,11 @@
       if (res.success) {
         document.getElementById('score-msg').innerText = 'Score saved successfully!';
         setTimeout(() => document.getElementById('score-msg').innerText = '', 3000);
-        // Update local cache
         studentMap[lrn].scores[dayNumber] = score;
-        onGradeStudentSelected();
+        onGradeStudentSelected(); // Refresh view to update the score badge
       } else { alert(res.error); }
     }
 
-    // ---- OTHERS ----
     function generateStudentWordDoc() {
       const lrn = selectedStudentLrn;
       const student = studentMap[lrn];
@@ -422,6 +498,7 @@
       a.href = url; a.download = `Diary_${student.lastName}_${student.firstName}.doc`; a.click(); URL.revokeObjectURL(url);
     }
 
+    // ---- OTHERS ----
     function renderStudentList() {
       const q = document.getElementById('search-student').value.toLowerCase();
       const sec = document.getElementById('filter-section').value;
