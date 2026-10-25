@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Portal - Work Immersion (v8.0)</title>
+  <title>Teacher Portal - Work Immersion (v8.1)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,7 +12,7 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v8.0)</p>
+      <p class="subtitle">Work Immersion System (v8.1)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -45,7 +45,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v8.0)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v8.1)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -242,28 +242,21 @@
       document.getElementById('teacher-info').innerText = `Logged in as: ${currentTeacher.email} (${currentTeacher.role})`;
       if (currentTeacher.role === 'Admin') document.getElementById('tab-approvals').style.display = 'block';
       else document.getElementById('tab-approvals').style.display = 'none';
-      switchTeachTab('attendance'); // Default tab
+      switchTeachTab('attendance'); 
       loadDashboardData();
     }
 
-    // INayos natin ito para hindi mag-crash kapag walang event
     function switchTeachTab(tab, event) {
       document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.dashboard-tabs .tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`teach-${tab}`).classList.add('active');
-      
-      // Kung may event (pinindot ng user), saka lang mag-highlight
       if (event && event.target) {
         event.target.classList.add('active');
       } else {
-        // Kung walang event (pagka-login), hanapin ang tamang button at i-highlight
         document.querySelectorAll('.dashboard-tabs .tab').forEach(t => {
-          if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(tab)) {
-            t.classList.add('active');
-          }
+          if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(tab)) t.classList.add('active');
         });
       }
-      
       if (tab === 'approvals') loadPendingTeachers();
     }
 
@@ -277,15 +270,26 @@
       const cached = localStorage.getItem('wi_teacher_cache');
       if (cached) processDashboardData(JSON.parse(cached));
       const res = await callAPI('getTeacherDashboardData');
-      if (res.success) { localStorage.setItem('wi_teacher_cache', JSON.stringify(res)); processDashboardData(res); }
+      if (res.success) { 
+        localStorage.setItem('wi_teacher_cache', JSON.stringify(res)); 
+        processDashboardData(res); 
+      }
     }
 
     function processDashboardData(data) {
       allRecords = data.records || [];
       allStudents = data.summary || [];
-      studentMap = {}; sectionsList.clear();
-      allStudents.forEach(s => { studentMap[s.lrn] = s; if (s.section) sectionsList.add(s.section); });
+      
+      // I-reset ang studentMap at sectionsList
+      studentMap = {}; 
+      sectionsList.clear();
+      
+      allStudents.forEach(s => { 
+        studentMap[s.lrn] = s; 
+        if (s.section) sectionsList.add(s.section); 
+      });
 
+      // I-populate ang mga dropdown ng section
       ['filter-section', 'masterlist-section', 'grade-section-filter'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -298,7 +302,9 @@
 
       renderStudentList();
       renderMasterlistPreview();
-      updateGradeDropdown();
+      
+      // Tiyaking naka-load na ang allStudents bago tawagin ang dropdown function
+      if (allStudents.length > 0) updateGradeDropdown();
       
       const badge = document.getElementById('notif-badge');
       const list = document.getElementById('notif-list');
@@ -318,12 +324,15 @@
       else { panel.style.display = 'none'; }
     }
 
+    // ---- GRADE DIARY DROPDOWNS ----
     function updateGradeDropdown() {
       const secFilter = document.getElementById('grade-section-filter').value;
       const dropdown = document.getElementById('grade-student-dropdown');
-      dropdown.innerHTML = '<option value="">Select Student</option>';
+      dropdown.innerHTML = '<option value="">Select Student (Alphabetically)</option>';
+      
       let filtered = allStudents.filter(s => secFilter === 'All' || s.section === secFilter);
       filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
+      
       filtered.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.lrn;
@@ -384,11 +393,13 @@
       if (res.success) {
         document.getElementById('score-msg').innerText = 'Score saved successfully!';
         setTimeout(() => document.getElementById('score-msg').innerText = '', 3000);
+        // Update local cache
         studentMap[lrn].scores[dayNumber] = score;
         onGradeStudentSelected();
       } else { alert(res.error); }
     }
 
+    // ---- OTHERS ----
     function generateStudentWordDoc() {
       const lrn = selectedStudentLrn;
       const student = studentMap[lrn];
