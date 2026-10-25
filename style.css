@@ -28,8 +28,8 @@ body {
 .auth-card h1 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 5px; }
 .subtitle { text-align: center; color: var(--text-sub); margin-bottom: 25px; font-size: 14px; }
 
-.tabs { display: flex; background: rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
-.tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.3s ease; font-size: 13px; }
+.tabs { display: flex; background: rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 4px; margin-bottom: 20px; overflow-x: auto; }
+.tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.3s ease; font-size: 13px; white-space: nowrap;}
 .tab.active { background: white; color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
 .auth-form { display: none; flex-direction: column; gap: 15px; }
@@ -58,32 +58,65 @@ body {
 
 /* DASHBOARD */
 .dashboard-card { max-width: 1100px; width: 100%; position: relative; }
-.dashboard-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 
-/* STICKY TABS (Fixed sa Taas) */
+/* STICKY TABS */
 .dashboard-tabs {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.95); /* Medyo solid para hindi madungisan ang likod */
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  margin: 0 -30px 20px -30px; /* Stretch sa gilid */
+  margin: 0 -30px 20px -30px;
   padding: 10px 30px;
   border-bottom: 1px solid rgba(0,0,0,0.05);
   border-top: 1px solid rgba(0,0,0,0.05);
-  overflow-x: auto; /* Scroll pataas-baba kung masikip */
+  overflow-x: auto;
   white-space: nowrap;
 }
 
-.dash-content { display: none; flex-direction: column; gap: 15px; padding-bottom: 50px;}
+.dash-content { display: none; flex-direction: column; gap: 15px; padding-bottom: 50px; }
 .dash-content.active { display: flex; }
 
 /* DATA TABLE RESPONSIVE */
 .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: rgba(255, 255, 255, 0.6); border-radius: 12px; overflow: hidden; }
 .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; }
 .data-table th { background: rgba(0, 122, 255, 0.1); color: var(--primary); font-weight: 600; }
-.data-table-container { overflow-x: auto; width: 100%; margin-top: 15px; -webkit-overflow-scrolling: touch;}
+.data-table-container { overflow-x: auto; width: 100%; margin-top: 15px; -webkit-overflow-scrolling: touch; border-radius: 12px; }
 
 /* UI COMPONENTS */
-.timer-display { font-size:
+.timer-display { font-size: 42px; font-weight: 700; text-align: center; letter-spacing: 2px; color: var(--primary); margin: 10px 0; }
+.button-row { display: flex; gap: 10px; }
+.button-row button { flex: 1; }
+.summary-box { background: rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; text-align: center; }
+.total-hours { font-size: 32px; font-weight: 700; color: var(--success); }
+
+.log-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+.log-list li { background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+
+.image-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+.note { font-size: 12px; color: var(--danger); font-style: italic; }
+
+/* MODAL */
+.modal {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  z-index: 1000; justify-content: center; align-items: center; padding: 20px;
+}
+.modal.active { display: flex; }
+.modal-content { max-width: 500px; max-height: 90vh; overflow-y: auto; animation: popIn 0.3s ease; }
+
+@keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+.announcement-banner {
+  background: rgba(255, 204, 0, 0.2); border-left: 5px solid #ffcc00;
+  padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;
+}
+.announcement-banner.active { display: block; }
+
+/* Diary Viewer Modal Specifics */
+#diary-modal .glass-card { max-width: 800px; width: 90%; }
+.diary-entry-block { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+.diary-entry-block img { max-width: 100%; max-height: 200px; object-fit: contain; margin: 5px; border-radius: 8px; border: 1px solid #ddd; }
