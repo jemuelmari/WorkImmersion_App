@@ -10,7 +10,7 @@
 
 body {
   min-height: 100vh; background: var(--bg-gradient); background-attachment: fixed;
-  color: var(--text-main); display: flex; justify-content: center; align-items: center; padding: 20px;
+  color: var(--text-main); display: flex; justify-content: center; padding: 20px; margin: 0;
 }
 
 .glass-card {
@@ -24,6 +24,7 @@ body {
 .screen { display: none; width: 100%; justify-content: center; }
 .screen.active { display: flex; }
 
+/* AUTH SCREENS */
 .auth-card h1 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 5px; }
 .subtitle { text-align: center; color: var(--text-sub); margin-bottom: 25px; font-size: 14px; }
 
@@ -38,13 +39,13 @@ body {
 .input-group label { font-size: 12px; font-weight: 600; color: var(--text-sub); margin-left: 4px; }
 .input-group input, .input-group select, .input-group textarea {
   padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);
-  background: rgba(255, 255, 255, 0.6); font-size: 14px; outline: none; transition: border 0.3s ease;
-  width: 100%;
+  background: rgba(255, 255, 255, 0.6); font-size: 14px; outline: none; transition: border 0.3s ease; width: 100%;
 }
 .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--primary); background: white; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
 .row .input-group { flex: 1; min-width: 150px; }
 
+/* BUTTONS */
 .btn-primary, .btn-success, .btn-danger, .btn-secondary, .btn-logout {
   padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease; text-align: center;
 }
@@ -54,66 +55,35 @@ body {
 .btn-secondary { background: rgba(0,0,0,0.1); color: var(--text-main); }
 .btn-logout { background: transparent; color: var(--danger); font-size: 14px; padding: 8px 12px; }
 .btn-primary:hover, .btn-success:hover, .btn-danger:hover { transform: scale(0.98); opacity: 0.9; }
-.error-msg { color: var(--danger); font-size: 13px; text-align: center; min-height: 16px; }
 
-.dashboard-card { max-width: 600px; width: 100%; }
-.dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-.dashboard-header h2 { font-size: 20px; }
-.dashboard-tabs { margin-bottom: 20px; overflow-x: auto; }
-.dash-content { display: none; flex-direction: column; gap: 15px; }
+/* DASHBOARD */
+.dashboard-card { max-width: 1100px; width: 100%; position: relative; }
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+
+/* STICKY TABS (Fixed sa Taas) */
+.dashboard-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95); /* Medyo solid para hindi madungisan ang likod */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin: 0 -30px 20px -30px; /* Stretch sa gilid */
+  padding: 10px 30px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  overflow-x: auto; /* Scroll pataas-baba kung masikip */
+  white-space: nowrap;
+}
+
+.dash-content { display: none; flex-direction: column; gap: 15px; padding-bottom: 50px;}
 .dash-content.active { display: flex; }
 
-.timer-display { font-size: 42px; font-weight: 700; text-align: center; letter-spacing: 2px; color: var(--primary); margin: 10px 0; }
-.button-row { display: flex; gap: 10px; }
-.button-row button { flex: 1; }
-.summary-box { background: rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; text-align: center; }
-.total-hours { font-size: 32px; font-weight: 700; color: var(--success); }
-
-.log-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-.log-list li { background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; justify-content: space-between; align-items: center;}
-
-.image-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-.image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
-.note { font-size: 12px; color: var(--danger); font-style: italic; }
-
-/* ================= TEACHER EXTRAS ================= */
+/* DATA TABLE RESPONSIVE */
 .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: rgba(255, 255, 255, 0.6); border-radius: 12px; overflow: hidden; }
-.data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; white-space: nowrap; }
+.data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; }
 .data-table th { background: rgba(0, 122, 255, 0.1); color: var(--primary); font-weight: 600; }
-.rubric-box { background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 12px; margin: 15px 0; display: flex; flex-direction: column; gap: 10px;}
-.rubric-box h4 { margin-bottom: 5px; color: var(--text-main); }
-.success-msg { color: var(--success); font-size: 14px; text-align: center; margin-top: 10px; }
+.data-table-container { overflow-x: auto; width: 100%; margin-top: 15px; -webkit-overflow-scrolling: touch;}
 
-.announcement-banner {
-  background: rgba(255, 204, 0, 0.2); border-left: 5px solid #ffcc00;
-  padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;
-}
-.announcement-banner.active { display: block; }
-
-/* ================= MODAL (EDIT PROFILE) ================= */
-.modal {
-  display: none; /* Nakatago by default */
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-  z-index: 1000; justify-content: center; align-items: center; padding: 20px;
-}
-
-.modal.active {
-  display: flex; /* Lalabas lang kapag may class na 'active' */
-}
-
-.modal-content {
-  max-width: 400px;
-  animation: popIn 0.3s ease;
-}
-
-@keyframes popIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* Search & Filter Row Fix */
-.row-controls {
-  display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end; flex-wrap: wrap;
-}
-.row-controls .input-group { margin-bottom: 0; }
+/* UI COMPONENTS */
+.timer-display { font-size:
