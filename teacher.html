@@ -3,55 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Portal - Work Immersion (v8.2)</title>
+  <title>Teacher Portal - Work Immersion (v9.0)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Custom Layout para sa Grading Area */
-    .grading-container {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-      flex-wrap: wrap; /* Para maging 1-column sa cellphone */
-      margin-top: 15px;
-    }
-    .diary-viewer {
-      flex: 1.5; /* Mas malaki ang diary side */
-      min-width: 300px;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid rgba(0,0,0,0.1);
-      max-height: 600px;
-      overflow-y: auto;
-    }
-    .grading-panel {
-      flex: 1;
-      min-width: 280px;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid rgba(0,0,0,0.1);
-      position: sticky;
-      top: 20px;
-    }
-    .diary-image-container img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-    }
-    .rubric-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .rubric-row input {
-      width: 80px;
-      text-align: center;
-    }
+    .grading-container { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; margin-top: 15px; }
+    .diary-viewer { flex: 1.5; min-width: 300px; background: rgba(255, 255, 255, 0.9); border-radius: 12px; padding: 20px; border: 1px solid rgba(0,0,0,0.1); max-height: 600px; overflow-y: auto; }
+    .grading-panel { flex: 1; min-width: 280px; background: rgba(255, 255, 255, 0.9); border-radius: 12px; padding: 20px; border: 1px solid rgba(0,0,0,0.1); position: sticky; top: 20px; }
+    .diary-image-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .diary-image-container img { max-width: 100%; border-radius: 8px; border: 1px solid #ddd; }
+    .no-image-prompt { color: #888; font-style: italic; font-size: 13px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -60,7 +21,7 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v8.2)</p>
+      <p class="subtitle">Work Immersion System (v9.0)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -94,7 +55,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v8.2)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v9.0)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -426,21 +387,26 @@
 
       entriesList.innerHTML = '';
       if (student.diaryEntries && student.diaryEntries.length > 0) {
-        // I-sort pataas para sa Day 1, Day 2, etc.
         student.diaryEntries.sort((a,b) => a.dayNumber - b.dayNumber).forEach(entry => {
           const div = document.createElement('div');
           div.style.marginBottom = '20px';
           div.style.borderBottom = '1px solid #eee';
           div.style.paddingBottom = '15px';
           
-          let imgsHtml = entry.imageUrls.map(url => 
-            `<a href="${url}" target="_blank">
-               <img src="${url}" style="max-width: 100%; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px;" onerror="this.style.display='none'">
-             </a>`
-          ).join('');
-          
           let score = student.scores[entry.dayNumber] ? student.scores[entry.dayNumber] + '/20' : 'Not Graded';
           let scoreColor = student.scores[entry.dayNumber] ? 'var(--success)' : '#ccc';
+          
+          // IMAGE FALLBACK LOGIC
+          let imgsHtml = '';
+          if (entry.imageUrls && entry.imageUrls.length > 0) {
+             imgsHtml = entry.imageUrls.map(url => 
+               `<a href="${url}" target="_blank">
+                  <img src="${url}" style="max-width: 100%; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px;" onerror="this.style.display='none'">
+                </a>`
+             ).join('');
+          } else {
+             imgsHtml = `<p class="no-image-prompt">No images uploaded for this day.</p>`;
+          }
           
           div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -448,7 +414,7 @@
               <span style="background: ${scoreColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">Score: ${score}</span>
             </div>
             <p style="font-size: 14px; line-height: 1.5; margin-bottom: 10px;">${entry.entryText}</p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">${imgsHtml}</div>
+            <div class="diary-image-container">${imgsHtml}</div>
           `;
           entriesList.appendChild(div);
         });
@@ -472,7 +438,7 @@
         document.getElementById('score-msg').innerText = 'Score saved successfully!';
         setTimeout(() => document.getElementById('score-msg').innerText = '', 3000);
         studentMap[lrn].scores[dayNumber] = score;
-        onGradeStudentSelected(); // Refresh view to update the score badge
+        onGradeStudentSelected(); 
       } else { alert(res.error); }
     }
 
