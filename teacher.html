@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Portal - Work Immersion (v9.1)</title>
+  <title>Teacher Portal - Work Immersion (v11.0)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -12,6 +12,9 @@
     .grading-panel { flex: 1; min-width: 280px; background: rgba(255, 255, 255, 0.9); border-radius: 12px; padding: 20px; border: 1px solid rgba(0,0,0,0.1); position: sticky; top: 20px; }
     .diary-image-container img { max-width: 100%; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; }
     .no-image-prompt { color: #888; font-style: italic; font-size: 13px; margin-top: 10px; }
+    .preview-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; transition: transform 0.2s; }
+    .preview-thumb:hover { transform: scale(1.5); z-index: 10; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .action-btn { background: transparent; border: none; cursor: pointer; font-size: 16px; }
   </style>
 </head>
 <body>
@@ -19,7 +22,7 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v9.1)</p>
+      <p class="subtitle">Work Immersion System (v11.0)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -52,7 +55,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v9.1)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v11.0)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -79,6 +82,7 @@
         <button class="tab" id="tab-approvals" onclick="switchTeachTab('approvals', event)" style="display: none; color: var(--danger); font-weight: bold;">Approvals</button>
       </div>
 
+      <!-- ATTENDANCE TAB WITH PHOTO PREVIEW & DELETE -->
       <div id="teach-attendance" class="dash-content active">
         <div class="row-controls">
           <div class="input-group" style="flex: 2;">
@@ -96,7 +100,20 @@
         <h3>Daily Attendance Logs</h3>
         <div class="data-table-container">
           <table class="data-table" id="attendance-table">
-            <thead><tr><th>LRN</th><th>Name</th><th>Section</th><th>Date</th><th>Time In</th><th>Time Out</th><th>Total Hrs</th></tr></thead>
+            <thead>
+              <tr>
+                <th>LRN</th>
+                <th>Name</th>
+                <th>Section</th>
+                <th>Date</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+                <th>Total Hrs</th>
+                <th>In Photo</th>
+                <th>Out Photo</th>
+                <th>Action</th>
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
         </div>
@@ -126,14 +143,11 @@
           <p style="font-size: 12px; color: gray; margin-bottom: 15px;" id="grading-student-info"></p>
 
           <div class="grading-container">
-            
-            <!-- KALIWA: DIARY VIEWER (IMAGES & TEXT) -->
             <div class="diary-viewer">
               <h4 style="margin-bottom: 10px; color: gray; font-size: 12px; text-transform: uppercase;">Student Submission</h4>
               <div id="diary-entries-list"></div>
             </div>
 
-            <!-- KANAN: GRADING PANEL (RUBRICS) -->
             <div class="grading-panel">
               <h4 style="margin-bottom: 15px; color: var(--primary);">Rubric Grading</h4>
               
@@ -147,7 +161,6 @@
                   </select>
                 </div>
 
-                <!-- RUBRICS -->
                 <div class="input-group"><label>Content & Relevance (Max 5)</label><input type="number" id="crit-1" max="5" min="0" placeholder="0-5"></div>
                 <div class="input-group"><label>Grammar & Clarity (Max 5)</label><input type="number" id="crit-2" max="5" min="0" placeholder="0-5"></div>
                 <div class="input-group"><label>Reflection & Insight (Max 5)</label><input type="number" id="crit-3" max="5" min="0" placeholder="0-5"></div>
@@ -158,7 +171,6 @@
               <button class="btn-primary" onclick="submitScore()" style="width: 100%; padding: 15px;">Submit Score</button>
               <p id="score-msg" class="success-msg"></p>
             </div>
-
           </div>
         </div>
       </div>
@@ -384,7 +396,6 @@
           let score = student.scores[entry.dayNumber] ? student.scores[entry.dayNumber] + '/20' : 'Not Graded';
           let scoreColor = student.scores[entry.dayNumber] ? 'var(--success)' : '#ccc';
           
-          // I-RENDER ANG IMAGES KUNG MERON
           let imgsHtml = '';
           if (entry.imageUrls && entry.imageUrls.length > 0) {
              imgsHtml = `<div class="diary-image-container">` + entry.imageUrls.map(url => 
@@ -393,7 +404,6 @@
                 </a>`
              ).join('') + `</div>`;
           } else {
-             // PROMPT KUNG WALANG IMAGES
              imgsHtml = `<p class="no-image-prompt">No images uploaded for this day.</p>`;
           }
           
@@ -437,7 +447,69 @@
       } else { alert(res.error); }
     }
 
-    // ---- OTHERS ----
+    // ---- ATTENDANCE LOGIC (UPDATED) ----
+    function renderStudentList() {
+      const q = document.getElementById('search-student').value.toLowerCase();
+      const sec = document.getElementById('filter-section').value;
+      const tbody = document.querySelector('#attendance-table tbody');
+      tbody.innerHTML = '';
+      
+      let filtered = allRecords.filter(r => {
+        const stud = studentMap[r.lrn]; if (!stud) return false;
+        const fullName = `${stud.lastName}, ${stud.firstName}`.toLowerCase();
+        return (fullName.includes(q) || r.lrn.toString().includes(q)) && ((sec === 'All') || (stud.section === sec));
+      });
+      
+      filtered.forEach(r => {
+        const stud = studentMap[r.lrn] || { lastName: 'Unknown', firstName: '', section: '-' };
+        
+        // Preview Logic: Kung may photo, gawing clickable thumbnail. Kung wala, '-'
+        let inPhotoHtml = r.timeInPhoto ? `<a href="${r.timeInPhoto}" target="_blank"><img src="${r.timeInPhoto}" class="preview-thumb" onerror="this.style.display='none'"></a>` : '-';
+        let outPhotoHtml = r.timeOutPhoto ? `<a href="${r.timeOutPhoto}" target="_blank"><img src="${r.timeOutPhoto}" class="preview-thumb" onerror="this.style.display='none'"></a>` : '-';
+        
+        // Delete Button
+        let actionHtml = `<button class="action-btn" onclick="deleteAttendance('${r.lrn}', '${r.date}')" title="Delete Invalid Record">🗑️</button>`;
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${r.lrn}</td>
+            <td>${stud.lastName}, ${stud.firstName}</td>
+            <td>${stud.section}</td>
+            <td>${r.date}</td>
+            <td>${r.timeIn || '-'}</td>
+            <td>${r.timeOut || '-'}</td>
+            <td>${r.totalHours || '0'} hrs</td>
+            <td>${inPhotoHtml}</td>
+            <td>${outPhotoHtml}</td>
+            <td>${actionHtml}</td>
+          </tr>`;
+      });
+    }
+
+    async function deleteAttendance(lrn, date) {
+      if (!confirm(`Are you sure you want to delete the attendance record for LRN ${lrn} on ${date}?`)) return;
+      
+      const res = await callAPI('deleteAttendance', { lrn, date });
+      if (res.success) {
+        alert('Attendance deleted successfully!');
+        loadDashboardData(); // I-reload ang data para mawala sa table
+      } else {
+        alert(res.error);
+      }
+    }
+
+    // ---- MASTERLIST & OTHERS ----
+    function renderMasterlistPreview() {
+      const sec = document.getElementById('masterlist-section').value;
+      const tbody = document.querySelector('#masterlist-preview tbody');
+      tbody.innerHTML = '';
+      let filtered = allStudents.filter(s => sec === 'All' || s.section === sec);
+      filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
+      filtered.forEach((s, index) => {
+        tbody.innerHTML += `<tr><td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section}</td><td>${s.sex || '-'}</td><td>${s.course}</td><td>${s.field}</td><td>${s.deploymentArea}</td></tr>`;
+      });
+    }
+
     function generateStudentWordDoc() {
       const lrn = selectedStudentLrn;
       const student = studentMap[lrn];
@@ -458,33 +530,6 @@
       const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
       const url = URL.createObjectURL(blob); const a = document.createElement('a');
       a.href = url; a.download = `Diary_${student.lastName}_${student.firstName}.doc`; a.click(); URL.revokeObjectURL(url);
-    }
-
-    function renderStudentList() {
-      const q = document.getElementById('search-student').value.toLowerCase();
-      const sec = document.getElementById('filter-section').value;
-      const tbody = document.querySelector('#attendance-table tbody');
-      tbody.innerHTML = '';
-      let filtered = allRecords.filter(r => {
-        const stud = studentMap[r.lrn]; if (!stud) return false;
-        const fullName = `${stud.lastName}, ${stud.firstName}`.toLowerCase();
-        return (fullName.includes(q) || r.lrn.toString().includes(q)) && ((sec === 'All') || (stud.section === sec));
-      });
-      filtered.forEach(r => {
-        const stud = studentMap[r.lrn] || { lastName: 'Unknown', firstName: '', section: '-' };
-        tbody.innerHTML += `<tr><td>${r.lrn}</td><td>${stud.lastName}, ${stud.firstName}</td><td>${stud.section}</td><td>${r.date}</td><td>${r.timeIn || '-'}</td><td>${r.timeOut || '-'}</td><td>${r.totalHours || '0'} hrs</td></tr>`;
-      });
-    }
-
-    function renderMasterlistPreview() {
-      const sec = document.getElementById('masterlist-section').value;
-      const tbody = document.querySelector('#masterlist-preview tbody');
-      tbody.innerHTML = '';
-      let filtered = allStudents.filter(s => sec === 'All' || s.section === sec);
-      filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
-      filtered.forEach((s, index) => {
-        tbody.innerHTML += `<tr><td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section}</td><td>${s.sex || '-'}</td><td>${s.course}</td><td>${s.field}</td><td>${s.deploymentArea}</td></tr>`;
-      });
     }
 
     function generateMasterlistDocx() {
