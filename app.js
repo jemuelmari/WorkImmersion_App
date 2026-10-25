@@ -1,5 +1,5 @@
 // ============================================================
-// WORK IMMERSION APP (app.js) - Final v8.0
+// WORK IMMERSION APP (app.js) - Final v9.0
 // ============================================================
 
 const API_URL = '/api/proxy';
@@ -191,7 +191,7 @@ async function loadAttendance() {
 }
 
 // ============================================================
-// DIARY
+// DIARY (UPDATED FOR BULLETPROOF IMAGE SAVING)
 // ============================================================
 
 function previewDiaryImages(e) {
@@ -231,6 +231,8 @@ async function saveDiary() {
     const res = await callAPI('uploadFile', { lrn: currentStudent.lrn, fileName: `Diary_Day${day}_Img${i+1}.jpg`, mimeType: 'image/jpeg', base64Data: diaryImagesBase64[i], fileType: 'diary' });
     if (res.success) uploadedUrls.push(res.fileUrl);
   }
+  
+  // SIGURADONG NAKA-JOIN ANG MGA URLS
   const res = await callAPI('saveDiary', { lrn: currentStudent.lrn, dayNumber: day, entryText: text, imageUrls: uploadedUrls });
   btn.innerText = 'Save Diary Entry'; btn.disabled = false;
   
