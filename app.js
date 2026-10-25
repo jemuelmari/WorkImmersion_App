@@ -1,10 +1,15 @@
 // ============================================================
-// WORK IMMERSION APP (app.js) - Final v9.0
+// WORK IMMERSION APP (app.js) - Final v10.0 (Camera Feature)
 // ============================================================
 
 const API_URL = '/api/proxy';
 let currentStudent = null;
 let diaryImagesBase64 = [];
+
+// Camera Variables
+let videoStream = null;
+let cameraAction = null; // 'TimeIn' or 'TimeOut'
+let countdownInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   startClock();
@@ -161,18 +166,112 @@ function updateAreas() {
 }
 
 // ============================================================
-// TIME IN / OUT & ATTENDANCE
+// CAMERA LOGIC (TIME IN / OUT)
 // ============================================================
 
-async function timeIn() {
-  const res = await callAPI('timeIn', { lrn: currentStudent.lrn });
-  if (res.success) { alert(`Time In: ${res.timeIn}`); loadAttendance(); } else { alert(res.error); }
+function startCamera(type) {
+  cameraAction = type;
+  const modal = document.getElementById('camera-modal');
+  const video = document.getElementById('camera-preview');
+  const title = document.getElementById('camera-title');
+  const countdown = document.getElementById('countdown-display');
+  const status = document.getElementById('camera-status');
+  
+  title.innerText = type === 'TimeIn' ? 'Time In Verification' : 'Time Out Verification';
+  status.innerText = 'Accessing camera...';
+  countdown.style.display = 'none';
+  modal.classList.add('active');
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+    .then(stream => {
+      videoStream = stream;
+      video.srcObject = stream;
+      status.innerText = 'Get ready!';
+      
+      // Start 3-second countdown
+      let count = 3;
+      countdown.style.display = 'block';
+      countdown.innerText = count;
+      
+      countdownInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdown.innerText = count;
+        } else {
+          clearInterval(countdownInterval);
+          countdown.style.display = 'none';
+          captureAndUpload();
+        }
+      }, 1000);
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Camera access denied. Please allow camera permissions to Time In/Out.');
+      closeCameraModal();
+    });
 }
 
-async function timeOut() {
-  const res = await callAPI('timeOut', { lrn: currentStudent.lrn });
-  if (res.success) { alert(`Time Out: ${res.timeOut}\nTotal: ${res.totalHours}`); loadAttendance(); } else { alert(res.error); }
+function captureAndUpload() {
+  const video = document.getElementById('camera-preview');
+  const status = document.getElementById('camera-status');
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  // Compress to JPEG (70% quality)
+  const base64Data = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+  status.innerText = 'Saving picture to Drive...';
+
+  callAPI('uploadDTRPhoto', {
+    lrn: currentStudent.lrn,
+    base64Data: base64Data,
+    type: cameraAction
+  }).then(res => {
+    if (res.success) {
+      status.innerText = 'Picture saved! Recording time...';
+      // Ngayon i-record ang oras
+      if (cameraAction === 'TimeIn') {
+        return callAPI('timeIn', { lrn: currentStudent.lrn, photoUrl: res.fileUrl });
+      } else {
+        return callAPI('timeOut', { lrn: currentStudent.lrn, photoUrl: res.fileUrl });
+      }
+    } else {
+      throw new Error(res.error);
+    }
+  }).then(res => {
+    if (res.success) {
+      alert(cameraAction === 'TimeIn' ? `Time In: ${res.timeIn}` : `Time Out: ${res.timeOut}\nTotal: ${res.totalHours}`);
+      closeCameraModal();
+      loadAttendance();
+    } else {
+      alert(res.error);
+      closeCameraModal();
+    }
+  }).catch(err => {
+    alert(err.message);
+    closeCameraModal();
+  });
 }
+
+function closeCameraModal() {
+  const modal = document.getElementById('camera-modal');
+  modal.classList.remove('active');
+  if (videoStream) {
+    videoStream.getTracks().forEach(track => track.stop());
+    videoStream = null;
+  }
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+}
+
+// ============================================================
+// ATTENDANCE & DIARY
+// ============================================================
 
 async function loadAttendance() {
   const res = await callAPI('getAttendance', { lrn: currentStudent.lrn });
@@ -189,10 +288,6 @@ async function loadAttendance() {
   }
   document.getElementById('total-hours').innerText = total.toFixed(2) + ' hrs';
 }
-
-// ============================================================
-// DIARY (UPDATED FOR BULLETPROOF IMAGE SAVING)
-// ============================================================
 
 function previewDiaryImages(e) {
   const files = Array.from(e.target.files);
@@ -232,7 +327,6 @@ async function saveDiary() {
     if (res.success) uploadedUrls.push(res.fileUrl);
   }
   
-  // SIGURADONG NAKA-JOIN ANG MGA URLS
   const res = await callAPI('saveDiary', { lrn: currentStudent.lrn, dayNumber: day, entryText: text, imageUrls: uploadedUrls });
   btn.innerText = 'Save Diary Entry'; btn.disabled = false;
   
