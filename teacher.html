@@ -13,7 +13,7 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v6.0)</p>
+      <p class="subtitle">Work Immersion System (v6.1)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -44,11 +44,11 @@
   <div id="teacher-dash" class="screen">
     <div class="glass-card dashboard-card" style="max-width: 1100px;">
       
-      <!-- HEADER WITH NOTIFICATION BELL -->
+      <!-- HEADER -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v6.0)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v6.1)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -104,11 +104,10 @@
         </div>
       </div>
 
-      <!-- SCORES TAB (DIARY & GRADING) -->
+      <!-- SCORES TAB -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
         
-        <!-- Filter and Search Row -->
         <div class="row" style="margin-bottom: 15px;">
           <div class="input-group" style="flex: 1;">
             <label>Filter by Section</label>
@@ -124,9 +123,8 @@
           </div>
         </div>
 
-        <!-- Diary Viewer / Grading Form -->
         <div id="grading-area" style="display: none; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
             <div>
               <h4 id="grading-student-name" style="color: var(--primary); font-size: 18px; margin-bottom: 5px;"></h4>
               <p style="font-size: 12px; color: gray;" id="grading-student-info"></p>
@@ -136,9 +134,7 @@
           
           <div style="margin-top: 15px;">
             <label style="font-weight: bold; font-size: 14px;">Diary Entries & Pictures</label>
-            <div id="diary-entries-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 300px; overflow-y: auto; padding-right: 10px;">
-              <!-- Lalabas dito ang mga entries -->
-            </div>
+            <div id="diary-entries-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 300px; overflow-y: auto; padding-right: 10px;"></div>
           </div>
 
           <div class="rubric-box" style="margin-top: 20px;">
@@ -147,7 +143,6 @@
               <div class="input-group"><label>Day Number</label><input type="number" id="score-day" min="1" max="10" placeholder="1-10"></div>
               <div class="input-group"><label>Score (0-20)</label><input type="number" id="score-total" max="20" min="0" placeholder="Total Score"></div>
             </div>
-            <p style="font-size: 11px; color: gray; margin-top: 5px;">*Enter total score (Max 20) for the specific day.</p>
           </div>
           <button class="btn-primary" onclick="submitScore()" style="width: 100%;">Submit Score for this Day</button>
           <p id="score-msg" class="success-msg"></p>
@@ -199,18 +194,8 @@
     </div>
   </div>
 
-  <!-- DIARY VIEWER MODAL (For Pictures) -->
-  <div id="diary-modal" class="modal">
-    <div class="glass-card modal-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 id="modal-title">Diary Entry</h3>
-        <button class="btn-secondary" onclick="closeDiaryModal()" style="padding: 5px 10px;">Close</button>
-      </div>
-      <div id="modal-content-area" style="max-height: 70vh; overflow-y: auto;"></div>
-    </div>
-  </div>
-
   <script>
+    // ---- SCRIPT LOGIC (Pareho sa binigay ko kanina) ----
     const API_URL = '/api/proxy';
     let currentTeacher = null;
     let allRecords = [];
@@ -219,7 +204,6 @@
     let allStudents = [];
     let selectedStudentLrn = '';
 
-    // ---- AUTH ----
     function switchTeacherTab(tab) {
       document.querySelectorAll('#teacher-auth .auth-form').forEach(f => f.classList.remove('active'));
       document.querySelectorAll('#teacher-auth .tabs .tab').forEach(t => t.classList.remove('active'));
@@ -260,7 +244,6 @@
       document.getElementById('teacher-login-form').reset();
     }
 
-    // ---- DASHBOARD ----
     function showTeacherDashboard() {
       document.getElementById('teacher-auth').classList.remove('active');
       document.getElementById('teacher-dash').classList.add('active');
@@ -298,7 +281,6 @@
       studentMap = {}; sectionsList.clear();
       allStudents.forEach(s => { studentMap[s.lrn] = s; if (s.section) sectionsList.add(s.section); });
 
-      // Populate all Section Dropdowns
       ['filter-section', 'masterlist-section', 'grade-section-filter'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -313,7 +295,6 @@
       renderMasterlistPreview();
       updateGradeDropdown();
       
-      // Notifications
       const badge = document.getElementById('notif-badge');
       const list = document.getElementById('notif-list');
       list.innerHTML = '';
@@ -332,15 +313,12 @@
       else { panel.style.display = 'none'; }
     }
 
-    // ---- GRADE DIARY LOGIC ----
     function updateGradeDropdown() {
       const secFilter = document.getElementById('grade-section-filter').value;
       const dropdown = document.getElementById('grade-student-dropdown');
       dropdown.innerHTML = '<option value="">Select Student</option>';
-      
       let filtered = allStudents.filter(s => secFilter === 'All' || s.section === secFilter);
       filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
-
       filtered.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.lrn;
@@ -364,7 +342,6 @@
       document.getElementById('grading-student-name').innerText = `${student.firstName} ${student.lastName}`;
       document.getElementById('grading-student-info').innerText = `LRN: ${student.lrn} | Section: ${student.section} | Field: ${student.field}`;
 
-      // Render Diary Entries (Pictures + Text)
       entriesList.innerHTML = '';
       if (student.diaryEntries && student.diaryEntries.length > 0) {
         student.diaryEntries.sort((a,b) => a.dayNumber - b.dayNumber).forEach(entry => {
@@ -402,81 +379,43 @@
       if (res.success) {
         document.getElementById('score-msg').innerText = 'Score saved successfully!';
         setTimeout(() => document.getElementById('score-msg').innerText = '', 3000);
-        
-        // I-update ang local cache at dropdown
         studentMap[lrn].scores[dayNumber] = score;
-        onGradeStudentSelected(); // Refresh display
+        onGradeStudentSelected();
       } else { alert(res.error); }
     }
 
-    // ---- GENERATE WORD DOC (Per Student) ----
     function generateStudentWordDoc() {
       const lrn = selectedStudentLrn;
       const student = studentMap[lrn];
       if (!student || !student.diaryEntries) { alert('No entries found.'); return; }
 
-      let html = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><style>
-          body { font-family: Arial, sans-serif; }
-          .entry { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 15px; }
-          .images img { max-width: 300px; border: 1px solid #ddd; margin: 5px; }
-        </style></head>
-        <body>
-          <h1 style="text-align:center;">DAILY DIARY</h1>
-          <h3>Name: ${student.firstName} ${student.lastName}</h3>
-          <h3>LRN: ${student.lrn}</h3>
-          <hr>
-      `;
+      let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body { font-family: Arial, sans-serif; } .entry { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 15px; } .images img { max-width: 300px; border: 1px solid #ddd; margin: 5px; }</style></head><body><h1 style="text-align:center;">DAILY DIARY</h1><h3>Name: ${student.firstName} ${student.lastName}</h3><h3>LRN: ${student.lrn}</h3><hr>`;
 
       let totalScore = 0, daysGraded = 0;
-
       student.diaryEntries.sort((a,b) => a.dayNumber - b.dayNumber).forEach(entry => {
         let imgsHtml = entry.imageUrls.map(url => `<img src="${url}">`).join('');
         let scoreText = student.scores[entry.dayNumber] ? `${student.scores[entry.dayNumber]}/20` : 'Not Graded';
-        
-        if (student.scores[entry.dayNumber]) {
-          totalScore += parseInt(student.scores[entry.dayNumber]);
-          daysGraded++;
-        }
-
-        html += `
-          <div class="entry">
-            <h4>Day ${entry.dayNumber} - ${entry.date} (Score: ${scoreText})</h4>
-            <p>${entry.entryText}</p>
-            <div class="images">${imgsHtml}</div>
-          </div>
-        `;
+        if (student.scores[entry.dayNumber]) { totalScore += parseInt(student.scores[entry.dayNumber]); daysGraded++; }
+        html += `<div class="entry"><h4>Day ${entry.dayNumber} - ${entry.date} (Score: ${scoreText})</h4><p>${entry.entryText}</p><div class="images">${imgsHtml}</div></div>`;
       });
 
       const average = daysGraded > 0 ? (totalScore / daysGraded).toFixed(2) : 0;
-      html += `<h3 style="text-align:right;">Average Score: ${average} / 20</h3>`;
-      html += `</body></html>`;
-
+      html += `<h3 style="text-align:right;">Average Score: ${average} / 20</h3></body></html>`;
       const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Diary_${student.lastName}_${student.firstName}.doc`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href = url; a.download = `Diary_${student.lastName}_${student.firstName}.doc`; a.click(); URL.revokeObjectURL(url);
     }
 
-    // ---- MASTERLIST & OTHERS ----
     function renderStudentList() {
       const q = document.getElementById('search-student').value.toLowerCase();
       const sec = document.getElementById('filter-section').value;
       const tbody = document.querySelector('#attendance-table tbody');
       tbody.innerHTML = '';
-
       let filtered = allRecords.filter(r => {
         const stud = studentMap[r.lrn]; if (!stud) return false;
         const fullName = `${stud.lastName}, ${stud.firstName}`.toLowerCase();
-        const matchSearch = fullName.includes(q) || r.lrn.toString().includes(q);
-        const matchSec = (sec === 'All') || (stud.section === sec);
-        return matchSearch && matchSec;
+        return (fullName.includes(q) || r.lrn.toString().includes(q)) && ((sec === 'All') || (stud.section === sec));
       });
-
       filtered.forEach(r => {
         const stud = studentMap[r.lrn] || { lastName: 'Unknown', firstName: '', section: '-' };
         tbody.innerHTML += `<tr><td>${r.lrn}</td><td>${stud.lastName}, ${stud.firstName}</td><td>${stud.section}</td><td>${r.date}</td><td>${r.timeIn || '-'}</td><td>${r.timeOut || '-'}</td><td>${r.totalHours || '0'} hrs</td></tr>`;
@@ -487,10 +426,8 @@
       const sec = document.getElementById('masterlist-section').value;
       const tbody = document.querySelector('#masterlist-preview tbody');
       tbody.innerHTML = '';
-
       let filtered = allStudents.filter(s => sec === 'All' || s.section === sec);
       filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
-
       filtered.forEach((s, index) => {
         tbody.innerHTML += `<tr><td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section}</td><td>${s.sex || '-'}</td><td>${s.course}</td><td>${s.field}</td><td>${s.deploymentArea}</td></tr>`;
       });
@@ -500,19 +437,12 @@
       const sec = document.getElementById('masterlist-section').value;
       let filtered = allStudents.filter(s => sec === 'All' || s.section === sec);
       filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
-
       if (filtered.length === 0) { alert('Walang estudyante.'); return; }
-
       let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body { font-family: Arial, sans-serif; } table { width: 100%; border-collapse: collapse; font-size: 11px; } th, td { border: 1px solid black; padding: 5px; text-align: left; } th { background-color: #f2f2f2; font-weight: bold; }</style></head><body><h2>WORK IMMERSION MASTERLIST</h2><p>Section: ${sec}</p><table><thead><tr><th>No.</th><th>Last Name</th><th>First Name</th><th>Middle Name</th><th>Section</th><th>Sex</th><th>Course</th><th>Field</th><th>Assigned Area</th></tr></thead><tbody>`;
-
-      filtered.forEach((s, index) => {
-        html += `<tr><td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section || ''}</td><td>${s.sex || ''}</td><td>${s.course || ''}</td><td>${s.field || ''}</td><td>${s.deploymentArea || ''}</td></tr>`;
-      });
-
+      filtered.forEach((s, index) => { html += `<tr><td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section || ''}</td><td>${s.sex || ''}</td><td>${s.course || ''}</td><td>${s.field || ''}</td><td>${s.deploymentArea || ''}</td></tr>`; });
       html += `</tbody></table></body></html>`;
       const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
       a.href = url; a.download = `Masterlist_${sec === 'All' ? 'All' : sec}.doc`; a.click(); URL.revokeObjectURL(url);
     }
 
@@ -534,28 +464,14 @@
       tbody.innerHTML = '';
       if (res.success && res.pending) {
         if (res.pending.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No pending.</td></tr>'; return; }
-        res.pending.forEach(t => {
-          tbody.innerHTML += `<tr><td>${t.email}</td><td>${t.role}</td><td><button class="btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="approveTeacher('${t.email}')">Approve</button> <button class="btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="rejectTeacher('${t.email}')">Reject</button></td></tr>`;
-        });
+        res.pending.forEach(t => { tbody.innerHTML += `<tr><td>${t.email}</td><td>${t.role}</td><td><button class="btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="approveTeacher('${t.email}')">Approve</button> <button class="btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="rejectTeacher('${t.email}')">Reject</button></td></tr>`; });
       }
     }
 
-    async function approveTeacher(email) {
-      if(!confirm(`Approve ${email}?`)) return;
-      const res = await callAPI('approveTeacher', { email });
-      alert(res.message || res.error); loadPendingTeachers();
-    }
+    async function approveTeacher(email) { if(!confirm(`Approve ${email}?`)) return; const res = await callAPI('approveTeacher', { email }); alert(res.message || res.error); loadPendingTeachers(); }
+    async function rejectTeacher(email) { if(!confirm(`Reject ${email}?`)) return; const res = await callAPI('rejectTeacher', { email }); alert(res.message || res.error); loadPendingTeachers(); }
 
-    async function rejectTeacher(email) {
-      if(!confirm(`Reject ${email}?`)) return;
-      const res = await callAPI('rejectTeacher', { email });
-      alert(res.message || res.error); loadPendingTeachers();
-    }
-
-    window.onload = () => {
-      const saved = localStorage.getItem('wi_teacher');
-      if (saved) { currentTeacher = JSON.parse(saved); showTeacherDashboard(); }
-    };
+    window.onload = () => { const saved = localStorage.getItem('wi_teacher'); if (saved) { currentTeacher = JSON.parse(saved); showTeacherDashboard(); } };
   </script>
 </body>
 </html>
