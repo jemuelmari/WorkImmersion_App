@@ -1,5 +1,5 @@
 // ============================================================
-// WORK IMMERSION APP (app.js) - Final with Auto-Update
+// WORK IMMERSION APP (app.js) - Final v8.0
 // ============================================================
 
 const API_URL = '/api/proxy';
@@ -417,7 +417,6 @@ if ('serviceWorker' in navigator) {
       const newWorker = reg.installing;
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          // May bagong update! I-refresh ang page para makita agad.
           console.log('New content is available; please refresh.');
           window.location.reload(); 
         }
