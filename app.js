@@ -1,5 +1,5 @@
 // ============================================================
-// WORK IMMERSION APP (app.js) - Final v10.1 (Compressed Camera)
+// WORK IMMERSION APP (app.js) - Final v12.0 (With Password Reset)
 // ============================================================
 
 const API_URL = '/api/proxy';
@@ -77,6 +77,8 @@ async function handleSignup(e) {
   const firstName = document.getElementById('signup-firstname').value.trim();
   const middleName = document.getElementById('signup-middlename').value.trim();
   const password = document.getElementById('signup-password').value;
+  const securityQuestion = document.getElementById('signup-security-question').value;
+  const securityAnswer = document.getElementById('signup-security-answer').value;
   const sex = document.getElementById('signup-sex').value;
   const section = document.getElementById('signup-section').value;
   const field = document.getElementById('signup-field').value;
@@ -85,10 +87,10 @@ async function handleSignup(e) {
   const schoolName = document.getElementById('signup-school').value;
   
   const errorEl = document.getElementById('signup-error');
-  if (!lrn || !password || !lastName || !firstName || !sex || !section) { errorEl.innerText = 'Fill all required fields.'; return; }
+  if (!lrn || !password || !lastName || !firstName || !sex || !section || !securityAnswer) { errorEl.innerText = 'Fill all required fields.'; return; }
 
   errorEl.innerText = 'Creating account...';
-  const res = await callAPI('signup', { lrn, lastName, firstName, middleName, password, field, course, deploymentArea, schoolName, sex, section });
+  const res = await callAPI('signup', { lrn, lastName, firstName, middleName, password, field, course, deploymentArea, schoolName, sex, section, securityQuestion, securityAnswer });
   
   if (res.success) {
     alert('Signup successful! Please log in.');
@@ -105,7 +107,7 @@ function logout() {
 }
 
 // ============================================================
-// DASHBOARD
+// DASHBOARD & DYNAMIC DROPDOWNS
 // ============================================================
 
 function showDashboard() {
@@ -126,10 +128,6 @@ function switchDashTab(tabName) {
   if (target) target.classList.add('active');
   document.querySelectorAll('.dashboard-tabs .tab').forEach(t => { if (t.getAttribute('onclick').includes(tabName)) t.classList.add('active'); });
 }
-
-// ============================================================
-// DYNAMIC DROPDOWNS
-// ============================================================
 
 const courseData = {
   'Health': { courses: ['Nursing', 'Medical Technology', 'Pharmacy'], areas: { 'Nursing': ['RHU San Jose', 'Lying-In Clinic', 'LGU San Jose'], 'Medical Technology': ['RHU San Jose', 'LGU San Jose'], 'Pharmacy': ['LGU San Jose', 'SHEBA'] } },
@@ -166,7 +164,75 @@ function updateAreas() {
 }
 
 // ============================================================
-// CAMERA LOGIC (WITH CANVAS COMPRESSION)
+// FORGOT PASSWORD LOGIC
+// ============================================================
+
+function showForgotPasswordModal() {
+  document.getElementById('forgot-password-modal').classList.add('active');
+  document.getElementById('reset-lrn').value = '';
+  document.getElementById('reset-question').innerText = '';
+  document.getElementById('reset-answer').value = '';
+  document.getElementById('reset-new-password').value = '';
+  document.getElementById('security-question-group').style.display = 'none';
+  document.getElementById('new-password-group').style.display = 'none';
+  document.getElementById('reset-msg').innerText = '';
+}
+
+function closeForgotPasswordModal() {
+  document.getElementById('forgot-password-modal').classList.remove('active');
+}
+
+async function loadSecurityQuestion() {
+  const lrn = document.getElementById('reset-lrn').value.trim();
+  if (!lrn) return;
+  
+  const res = await callAPI('getSecurityQuestion', { lrn });
+  
+  if (res.success && res.question) {
+    document.getElementById('reset-question').innerText = res.question;
+    document.getElementById('security-question-group').style.display = 'flex';
+    document.getElementById('new-password-group').style.display = 'flex';
+    document.getElementById('reset-msg').innerText = '';
+  } else {
+    document.getElementById('reset-question').innerText = '';
+    document.getElementById('security-question-group').style.display = 'none';
+    document.getElementById('new-password-group').style.display = 'none';
+    document.getElementById('reset-msg').innerText = res.error;
+  }
+}
+
+async function resetPassword() {
+  const lrn = document.getElementById('reset-lrn').value.trim();
+  const answer = document.getElementById('reset-answer').value.trim();
+  const newPassword = document.getElementById('reset-new-password').value;
+  const msgEl = document.getElementById('reset-msg');
+  
+  if (!lrn || !answer || !newPassword) {
+    msgEl.innerText = 'Please fill in all fields.';
+    msgEl.style.color = 'var(--danger)';
+    return;
+  }
+  
+  msgEl.innerText = 'Resetting...';
+  msgEl.style.color = 'var(--primary)';
+  
+  const res = await callAPI('resetPassword', { lrn, answer, newPassword });
+  
+  if (res.success) {
+    msgEl.innerText = res.message;
+    msgEl.style.color = 'var(--success)';
+    setTimeout(() => {
+      closeForgotPasswordModal();
+      document.getElementById('login-lrn').value = lrn;
+    }, 2000);
+  } else {
+    msgEl.innerText = res.error;
+    msgEl.style.color = 'var(--danger)';
+  }
+}
+
+// ============================================================
+// CAMERA LOGIC (COMPRESSED)
 // ============================================================
 
 function startCamera(type) {
@@ -188,7 +254,6 @@ function startCamera(type) {
       video.srcObject = stream;
       status.innerText = 'Get ready!';
       
-      // Start 3-second countdown
       let count = 3;
       countdown.style.display = 'block';
       countdown.innerText = count;
@@ -215,9 +280,8 @@ function captureAndUpload() {
   const video = document.getElementById('camera-preview');
   const status = document.getElementById('camera-status');
   
-  // === COMPRESSION LOGIC ===
   const canvas = document.createElement('canvas');
-  const MAX_WIDTH = 600; // Pinaliit natin from 800 to 600 para mas mabilis
+  const MAX_WIDTH = 600;
   const scale = MAX_WIDTH / video.videoWidth;
   
   canvas.width = MAX_WIDTH;
@@ -226,7 +290,6 @@ function captureAndUpload() {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   
-  // I-compress sa JPEG na may 60% quality (mga 30KB-50KB lang ito)
   const base64Data = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
   status.innerText = 'Saving picture to Drive...';
 
@@ -237,7 +300,6 @@ function captureAndUpload() {
   }).then(res => {
     if (res.success) {
       status.innerText = 'Picture saved! Recording time...';
-      // Ngayon i-record ang oras
       if (cameraAction === 'TimeIn') {
         return callAPI('timeIn', { lrn: currentStudent.lrn, photoUrl: res.fileUrl });
       } else {
@@ -294,7 +356,6 @@ async function loadAttendance() {
   document.getElementById('total-hours').innerText = total.toFixed(2) + ' hrs';
 }
 
-// Diary Preview: Limit file size & Compress before saving to Base64 array
 function previewDiaryImages(e) {
   const files = Array.from(e.target.files);
   const preview = document.getElementById('diary-preview');
@@ -311,13 +372,12 @@ function previewDiaryImages(e) {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; // Standard size for diary images
+        const MAX_WIDTH = 800; 
         canvas.width = MAX_WIDTH; 
         canvas.height = img.height * (MAX_WIDTH / img.width);
         const ctx = canvas.getContext('2d'); 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // 70% quality compression
         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
         diaryImagesBase64.push(compressedDataUrl.split(',')[1]);
         
