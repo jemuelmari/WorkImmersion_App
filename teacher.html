@@ -13,7 +13,7 @@
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v5.0 Fast)</p>
+      <p class="subtitle">Work Immersion System (v6.0)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -48,7 +48,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v5.0)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v6.0)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -60,7 +60,6 @@
         </div>
       </div>
 
-      <!-- RECENT ACTIVITY DROPDOWN -->
       <div id="notification-panel" style="display: none; background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
         <h4 style="margin-bottom: 10px; font-size: 14px; color: var(--primary);">🔔 Recent Submissions</h4>
         <ul id="notif-list" style="list-style: none; font-size: 13px; display: flex; flex-direction: column; gap: 10px;">
@@ -105,44 +104,54 @@
         </div>
       </div>
 
-      <!-- SCORES TAB -->
+      <!-- SCORES TAB (DIARY & GRADING) -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
         
+        <!-- Filter and Search Row -->
         <div class="row" style="margin-bottom: 15px;">
           <div class="input-group" style="flex: 1;">
             <label>Filter by Section</label>
-            <select id="grade-section-filter" onchange="populateGradeDatalist()">
+            <select id="grade-section-filter" onchange="updateGradeDropdown()">
               <option value="All">All Sections</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex: 2;">
+            <label>Select Student</label>
+            <select id="grade-student-dropdown" onchange="onGradeStudentSelected()">
+              <option value="">Select Student (Alphabetically)</option>
             </select>
           </div>
         </div>
 
-        <div class="row">
-          <div class="input-group" style="flex: 2;">
-            <label>Search & Select Student</label>
-            <input type="text" id="search-grade-student" list="students-list" placeholder="Type student name or LRN..." oninput="onGradeStudentSelected()">
-            <datalist id="students-list"></datalist>
+        <!-- Diary Viewer / Grading Form -->
+        <div id="grading-area" style="display: none; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h4 id="grading-student-name" style="color: var(--primary); font-size: 18px; margin-bottom: 5px;"></h4>
+              <p style="font-size: 12px; color: gray;" id="grading-student-info"></p>
+            </div>
+            <button class="btn-secondary" onclick="generateStudentWordDoc()">Download Diary (Word)</button>
           </div>
-          <div class="input-group" style="flex: 1;"><label>LRN (Auto-filled)</label><input type="text" id="score-lrn" placeholder="Select student" readonly style="background: #eee;"></div>
-          <div class="input-group" style="flex: 1;"><label>Day Number</label><input type="number" id="score-day" min="1" max="10" placeholder="1-10"></div>
-        </div>
-        
-        <div id="submission-tracker" style="display: none; background: rgba(0,122,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-          <h4 style="margin-bottom: 10px; font-size: 14px;">Diary Submission Status:</h4>
-          <div id="tracker-grid" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
-        </div>
+          
+          <div style="margin-top: 15px;">
+            <label style="font-weight: bold; font-size: 14px;">Diary Entries & Pictures</label>
+            <div id="diary-entries-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 300px; overflow-y: auto; padding-right: 10px;">
+              <!-- Lalabas dito ang mga entries -->
+            </div>
+          </div>
 
-        <div class="rubric-box">
-          <h4>Rubrics</h4>
-          <div class="input-group"><label>Content & Relevance (Max 5)</label><input type="number" id="crit-1" max="5" min="0" placeholder="0-5"></div>
-          <div class="input-group"><label>Grammar & Clarity (Max 5)</label><input type="number" id="crit-2" max="5" min="0" placeholder="0-5"></div>
-          <div class="input-group"><label>Reflection & Insight (Max 5)</label><input type="number" id="crit-3" max="5" min="0" placeholder="0-5"></div>
-          <div class="input-group"><label>Completeness (Max 3)</label><input type="number" id="crit-4" max="3" min="0" placeholder="0-3"></div>
-          <div class="input-group"><label>Punctuality (Max 2)</label><input type="number" id="crit-5" max="2" min="0" placeholder="0-2"></div>
+          <div class="rubric-box" style="margin-top: 20px;">
+            <h4>Grading Rubrics (Per Day)</h4>
+            <div class="row">
+              <div class="input-group"><label>Day Number</label><input type="number" id="score-day" min="1" max="10" placeholder="1-10"></div>
+              <div class="input-group"><label>Score (0-20)</label><input type="number" id="score-total" max="20" min="0" placeholder="Total Score"></div>
+            </div>
+            <p style="font-size: 11px; color: gray; margin-top: 5px;">*Enter total score (Max 20) for the specific day.</p>
+          </div>
+          <button class="btn-primary" onclick="submitScore()" style="width: 100%;">Submit Score for this Day</button>
+          <p id="score-msg" class="success-msg"></p>
         </div>
-        <button class="btn-primary" onclick="submitScore()">Submit Score</button>
-        <p id="score-msg" class="success-msg"></p>
       </div>
 
       <!-- ANNOUNCEMENT TAB -->
@@ -161,7 +170,7 @@
         <div class="row-controls">
           <div class="input-group" style="flex: 2;">
             <label>Filter by Section</label>
-            <select id="masterlist-section">
+            <select id="masterlist-section" onchange="renderMasterlistPreview()">
               <option value="All">All Sections</option>
             </select>
           </div>
@@ -179,7 +188,6 @@
       <!-- APPROVALS TAB -->
       <div id="teach-approvals" class="dash-content">
         <h3>Pending Teacher Registrations</h3>
-        <p class="note">Ito ay makikita lamang ng Main Admin. Aprubahan ang mga bagong guro.</p>
         <div class="data-table-container">
           <table class="data-table" id="approvals-table">
             <thead><tr><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
@@ -191,6 +199,17 @@
     </div>
   </div>
 
+  <!-- DIARY VIEWER MODAL (For Pictures) -->
+  <div id="diary-modal" class="modal">
+    <div class="glass-card modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 id="modal-title">Diary Entry</h3>
+        <button class="btn-secondary" onclick="closeDiaryModal()" style="padding: 5px 10px;">Close</button>
+      </div>
+      <div id="modal-content-area" style="max-height: 70vh; overflow-y: auto;"></div>
+    </div>
+  </div>
+
   <script>
     const API_URL = '/api/proxy';
     let currentTeacher = null;
@@ -198,18 +217,14 @@
     let studentMap = {};
     let sectionsList = new Set();
     let allStudents = [];
+    let selectedStudentLrn = '';
 
-    // ---- TEACHER AUTHENTICATION ----
+    // ---- AUTH ----
     function switchTeacherTab(tab) {
       document.querySelectorAll('#teacher-auth .auth-form').forEach(f => f.classList.remove('active'));
       document.querySelectorAll('#teacher-auth .tabs .tab').forEach(t => t.classList.remove('active'));
-      if (tab === 'login') {
-        document.getElementById('teacher-login-form').classList.add('active');
-        document.getElementById('tab-t-login').classList.add('active');
-      } else {
-        document.getElementById('teacher-signup-form').classList.add('active');
-        document.getElementById('tab-t-signup').classList.add('active');
-      }
+      if (tab === 'login') { document.getElementById('teacher-login-form').classList.add('active'); document.getElementById('tab-t-login').classList.add('active'); }
+      else { document.getElementById('teacher-signup-form').classList.add('active'); document.getElementById('tab-t-signup').classList.add('active'); }
     }
 
     async function handleTeacherLogin(e) {
@@ -217,19 +232,14 @@
       const email = document.getElementById('t-login-email').value.trim();
       const password = document.getElementById('t-login-password').value;
       const errorEl = document.getElementById('t-login-error');
-      
       errorEl.innerText = 'Logging in...';
       const res = await callAPI('teacherLogin', { email, password });
-      
       if (res.success) {
         currentTeacher = res.teacher;
         localStorage.setItem('wi_teacher', JSON.stringify(currentTeacher));
         errorEl.innerText = '';
         showTeacherDashboard();
-      } else {
-        errorEl.innerText = res.error;
-        errorEl.style.color = 'var(--danger)';
-      }
+      } else { errorEl.innerText = res.error; errorEl.style.color = 'var(--danger)'; }
     }
 
     async function handleTeacherRegister(e) {
@@ -237,43 +247,28 @@
       const email = document.getElementById('t-signup-email').value.trim();
       const password = document.getElementById('t-signup-password').value;
       const msgEl = document.getElementById('t-signup-error');
-      
-      msgEl.innerText = 'Creating account...';
-      msgEl.style.color = 'gray';
+      msgEl.innerText = 'Creating...';
       const res = await callAPI('teacherRegister', { email, password });
-      
-      if (res.success) {
-        msgEl.innerText = res.message;
-        msgEl.style.color = 'var(--success)';
-        document.getElementById('teacher-signup-form').reset();
-      } else {
-        msgEl.innerText = res.error;
-        msgEl.style.color = 'var(--danger)';
-      }
+      if (res.success) { msgEl.innerText = res.message; msgEl.style.color = 'var(--success)'; document.getElementById('teacher-signup-form').reset(); }
+      else { msgEl.innerText = res.error; msgEl.style.color = 'var(--danger)'; }
     }
 
     function logoutTeacher() {
-      currentTeacher = null;
-      localStorage.removeItem('wi_teacher');
+      currentTeacher = null; localStorage.removeItem('wi_teacher');
       document.getElementById('teacher-dash').classList.remove('active');
       document.getElementById('teacher-auth').classList.add('active');
       document.getElementById('teacher-login-form').reset();
     }
 
-    // ---- TEACHER DASHBOARD ----
+    // ---- DASHBOARD ----
     function showTeacherDashboard() {
       document.getElementById('teacher-auth').classList.remove('active');
       document.getElementById('teacher-dash').classList.add('active');
       document.getElementById('teacher-info').innerText = `Logged in as: ${currentTeacher.email} (${currentTeacher.role})`;
-      
-      if (currentTeacher.role === 'Admin') {
-        document.getElementById('tab-approvals').style.display = 'block';
-      } else {
-        document.getElementById('tab-approvals').style.display = 'none';
-      }
-
+      if (currentTeacher.role === 'Admin') document.getElementById('tab-approvals').style.display = 'block';
+      else document.getElementById('tab-approvals').style.display = 'none';
       switchTeachTab('attendance');
-      loadDashboardData(); // Tanging function tawagin
+      loadDashboardData();
     }
 
     function switchTeachTab(tab) {
@@ -281,190 +276,210 @@
       document.querySelectorAll('.dashboard-tabs .tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`teach-${tab}`).classList.add('active');
       event.target.classList.add('active');
-
       if (tab === 'approvals') loadPendingTeachers();
     }
 
     async function callAPI(action, payload = {}) {
-      const res = await fetch(API_URL, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, ...payload })
-      });
+      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, ...payload }) });
       return await res.json();
     }
 
-    // ---- FAST DASHBOARD LOADING (MERGE API CALLS + CACHE) ----
+    // ---- FAST DATA LOADING ----
     async function loadDashboardData() {
-      // 1. Kunin agad sa cache para mabilis
       const cached = localStorage.getItem('wi_teacher_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        processDashboardData(parsed); // I-render agad
-      }
-
-      // 2. Kunin ang fresh data sa backend (isang tawag lang)
+      if (cached) processDashboardData(JSON.parse(cached));
       const res = await callAPI('getTeacherDashboardData');
-      if (res.success) {
-        localStorage.setItem('wi_teacher_cache', JSON.stringify(res)); // I-save sa cache
-        processDashboardData(res); // I-update ang UI
-      }
+      if (res.success) { localStorage.setItem('wi_teacher_cache', JSON.stringify(res)); processDashboardData(res); }
     }
 
     function processDashboardData(data) {
       allRecords = data.records || [];
       allStudents = data.summary || [];
-      
-      studentMap = {};
-      sectionsList.clear();
+      studentMap = {}; sectionsList.clear();
+      allStudents.forEach(s => { studentMap[s.lrn] = s; if (s.section) sectionsList.add(s.section); });
 
-      allStudents.forEach(s => {
-        studentMap[s.lrn] = s;
-        if (s.section) sectionsList.add(s.section);
-      });
-
-      // Populate Sections
-      const secFilters = ['filter-section', 'masterlist-section', 'grade-section-filter'];
-      secFilters.forEach(id => {
+      // Populate all Section Dropdowns
+      ['filter-section', 'masterlist-section', 'grade-section-filter'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-          const currentVal = el.value;
+          const curVal = el.value;
           el.innerHTML = '<option value="All">All Sections</option>';
-          Array.from(sectionsList).sort().forEach(sec => {
-            el.innerHTML += `<option value="${sec}">${sec}</option>`;
-          });
-          el.value = currentVal; // Ibalik ang dating napili kung meron
+          Array.from(sectionsList).sort().forEach(sec => el.innerHTML += `<option value="${sec}">${sec}</option>`);
+          el.value = curVal;
         }
       });
 
-      // Populate UI
       renderStudentList();
       renderMasterlistPreview();
-      populateGradeDatalist();
+      updateGradeDropdown();
       
-      // Update Notifications
+      // Notifications
       const badge = document.getElementById('notif-badge');
       const list = document.getElementById('notif-list');
       list.innerHTML = '';
-
       if (data.activities && data.activities.length > 0) {
-        badge.style.display = 'block'; 
-        badge.innerText = data.activities.length; 
+        badge.style.display = 'block'; badge.innerText = data.activities.length; 
         data.activities.forEach(a => {
-          const li = document.createElement('li');
-          li.innerHTML = `<strong>${a.studentName}</strong> ${a.detail} <br><span style="color:gray; font-size:11px;">${new Date(a.timestamp).toLocaleString()}</span>`;
-          li.style.borderBottom = '1px solid #eee';
-          li.style.paddingBottom = '8px';
-          list.appendChild(li);
+          list.innerHTML += `<li style="border-bottom: 1px solid #eee; padding-bottom: 8px;"><strong>${a.studentName}</strong> ${a.detail} <br><span style="color:gray; font-size:11px;">${new Date(a.timestamp).toLocaleString()}</span></li>`;
         });
-      } else {
-        badge.style.display = 'none';
-        list.innerHTML = '<li>No recent activity.</li>';
-      }
+      } else { badge.style.display = 'none'; list.innerHTML = '<li>No recent activity.</li>'; }
     }
 
     function toggleNotifications() {
       const panel = document.getElementById('notification-panel');
       const badge = document.getElementById('notif-badge');
-      if (panel.style.display === 'none') {
-        panel.style.display = 'block';
-        badge.style.display = 'none'; 
-      } else {
-        panel.style.display = 'none';
-      }
+      if (panel.style.display === 'none') { panel.style.display = 'block'; badge.style.display = 'none'; } 
+      else { panel.style.display = 'none'; }
     }
 
-    // ---- RENDERING FUNCTIONS ----
-    function populateGradeDatalist() {
-      const datalist = document.getElementById('students-list');
-      datalist.innerHTML = '';
-      const filterVal = document.getElementById('grade-section-filter').value;
+    // ---- GRADE DIARY LOGIC ----
+    function updateGradeDropdown() {
+      const secFilter = document.getElementById('grade-section-filter').value;
+      const dropdown = document.getElementById('grade-student-dropdown');
+      dropdown.innerHTML = '<option value="">Select Student</option>';
       
-      allStudents.filter(s => filterVal === 'All' || s.section === filterVal)
-                 .sort((a, b) => a.lastName.localeCompare(b.lastName))
-                 .forEach(s => {
-        const option = document.createElement('option');
-        option.value = `${s.lastName}, ${s.firstName} (${s.lrn})`;
-        option.setAttribute('data-lrn', s.lrn);
-        datalist.appendChild(option);
+      let filtered = allStudents.filter(s => secFilter === 'All' || s.section === secFilter);
+      filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
+
+      filtered.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.lrn;
+        opt.textContent = `${s.lastName}, ${s.firstName} (${s.section})`;
+        dropdown.appendChild(opt);
       });
     }
 
     function onGradeStudentSelected() {
-      const input = document.getElementById('search-grade-student').value;
-      const lrnInput = document.getElementById('score-lrn');
-      const tracker = document.getElementById('submission-tracker');
-      const trackerGrid = document.getElementById('tracker-grid');
+      const lrn = document.getElementById('grade-student-dropdown').value;
+      const gradingArea = document.getElementById('grading-area');
+      const entriesList = document.getElementById('diary-entries-list');
       
-      const options = document.querySelectorAll('#students-list option');
-      let foundStudent = null;
+      if (!lrn) { gradingArea.style.display = 'none'; return; }
       
-      for (let opt of options) {
-        if (opt.value === input) {
-          foundStudent = studentMap[opt.getAttribute('data-lrn')];
-          break;
-        }
-      }
-      
-      if (foundStudent) {
-        lrnInput.value = foundStudent.lrn;
-        lrnInput.style.background = 'white';
-        lrnInput.style.color = 'var(--success)';
-        lrnInput.style.fontWeight = 'bold';
+      selectedStudentLrn = lrn;
+      const student = studentMap[lrn];
+      if (!student) return;
 
-        tracker.style.display = 'block';
-        trackerGrid.innerHTML = '';
-        
-        for (let i = 1; i <= 10; i++) {
-          const dayStr = String(i);
-          const isSubmitted = foundStudent.diarySubmitted.includes(dayStr);
-          
-          const badge = document.createElement('div');
-          badge.style.padding = '5px 10px';
-          badge.style.borderRadius = '20px';
-          badge.style.fontSize = '12px';
-          badge.style.fontWeight = 'bold';
-          badge.innerText = `Day ${i}`;
-          
-          if (isSubmitted) {
-            badge.style.background = 'var(--success)';
-            badge.style.color = 'white';
-          } else {
-            badge.style.background = '#ffcccc';
-            badge.style.color = 'var(--danger)';
-            badge.style.border = '1px solid var(--danger)';
-          }
-          trackerGrid.appendChild(badge);
-        }
+      gradingArea.style.display = 'block';
+      document.getElementById('grading-student-name').innerText = `${student.firstName} ${student.lastName}`;
+      document.getElementById('grading-student-info').innerText = `LRN: ${student.lrn} | Section: ${student.section} | Field: ${student.field}`;
 
+      // Render Diary Entries (Pictures + Text)
+      entriesList.innerHTML = '';
+      if (student.diaryEntries && student.diaryEntries.length > 0) {
+        student.diaryEntries.sort((a,b) => a.dayNumber - b.dayNumber).forEach(entry => {
+          const div = document.createElement('div');
+          div.className = 'diary-entry-block';
+          let imgsHtml = entry.imageUrls.map(url => `<a href="${url}" target="_blank"><img src="${url}"></a>`).join('');
+          let score = student.scores[entry.dayNumber] ? student.scores[entry.dayNumber] + '/20' : 'Not Graded';
+          
+          div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <strong>Day ${entry.dayNumber} (${entry.date})</strong>
+              <span style="background: ${student.scores[entry.dayNumber] ? 'var(--success)' : '#ccc'}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">Score: ${score}</span>
+            </div>
+            <p style="font-size: 13px; margin-bottom: 8px;">${entry.entryText}</p>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">${imgsHtml}</div>
+          `;
+          entriesList.appendChild(div);
+        });
       } else {
-        lrnInput.value = '';
-        lrnInput.style.background = '#eee';
-        lrnInput.style.color = 'inherit';
-        lrnInput.style.fontWeight = 'normal';
-        tracker.style.display = 'none';
+        entriesList.innerHTML = '<p style="color:gray; font-size:13px;">No diary entries submitted yet.</p>';
       }
     }
 
+    async function submitScore() {
+      const lrn = selectedStudentLrn;
+      const dayNumber = document.getElementById('score-day').value;
+      const score = parseInt(document.getElementById('score-total').value);
+      
+      if (!lrn || !dayNumber || isNaN(score) || score < 0 || score > 20) {
+        alert('Please select a student, enter a valid Day Number (1-10), and a score (0-20).');
+        return;
+      }
+
+      const res = await callAPI('saveScore', { lrn, dayNumber, score, criteria: {} });
+      if (res.success) {
+        document.getElementById('score-msg').innerText = 'Score saved successfully!';
+        setTimeout(() => document.getElementById('score-msg').innerText = '', 3000);
+        
+        // I-update ang local cache at dropdown
+        studentMap[lrn].scores[dayNumber] = score;
+        onGradeStudentSelected(); // Refresh display
+      } else { alert(res.error); }
+    }
+
+    // ---- GENERATE WORD DOC (Per Student) ----
+    function generateStudentWordDoc() {
+      const lrn = selectedStudentLrn;
+      const student = studentMap[lrn];
+      if (!student || !student.diaryEntries) { alert('No entries found.'); return; }
+
+      let html = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><style>
+          body { font-family: Arial, sans-serif; }
+          .entry { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 15px; }
+          .images img { max-width: 300px; border: 1px solid #ddd; margin: 5px; }
+        </style></head>
+        <body>
+          <h1 style="text-align:center;">DAILY DIARY</h1>
+          <h3>Name: ${student.firstName} ${student.lastName}</h3>
+          <h3>LRN: ${student.lrn}</h3>
+          <hr>
+      `;
+
+      let totalScore = 0, daysGraded = 0;
+
+      student.diaryEntries.sort((a,b) => a.dayNumber - b.dayNumber).forEach(entry => {
+        let imgsHtml = entry.imageUrls.map(url => `<img src="${url}">`).join('');
+        let scoreText = student.scores[entry.dayNumber] ? `${student.scores[entry.dayNumber]}/20` : 'Not Graded';
+        
+        if (student.scores[entry.dayNumber]) {
+          totalScore += parseInt(student.scores[entry.dayNumber]);
+          daysGraded++;
+        }
+
+        html += `
+          <div class="entry">
+            <h4>Day ${entry.dayNumber} - ${entry.date} (Score: ${scoreText})</h4>
+            <p>${entry.entryText}</p>
+            <div class="images">${imgsHtml}</div>
+          </div>
+        `;
+      });
+
+      const average = daysGraded > 0 ? (totalScore / daysGraded).toFixed(2) : 0;
+      html += `<h3 style="text-align:right;">Average Score: ${average} / 20</h3>`;
+      html += `</body></html>`;
+
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Diary_${student.lastName}_${student.firstName}.doc`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ---- MASTERLIST & OTHERS ----
     function renderStudentList() {
-      const searchQuery = document.getElementById('search-student').value.toLowerCase();
-      const sectionFilter = document.getElementById('filter-section').value;
+      const q = document.getElementById('search-student').value.toLowerCase();
+      const sec = document.getElementById('filter-section').value;
       const tbody = document.querySelector('#attendance-table tbody');
       tbody.innerHTML = '';
 
       let filtered = allRecords.filter(r => {
-        const stud = studentMap[r.lrn];
-        if (!stud) return false;
+        const stud = studentMap[r.lrn]; if (!stud) return false;
         const fullName = `${stud.lastName}, ${stud.firstName}`.toLowerCase();
-        const matchSearch = fullName.includes(searchQuery) || r.lrn.toString().includes(searchQuery);
-        const matchSection = (sectionFilter === 'All') || (stud.section === sectionFilter);
-        return matchSearch && matchSection;
+        const matchSearch = fullName.includes(q) || r.lrn.toString().includes(q);
+        const matchSec = (sec === 'All') || (stud.section === sec);
+        return matchSearch && matchSec;
       });
 
       filtered.forEach(r => {
         const stud = studentMap[r.lrn] || { lastName: 'Unknown', firstName: '', section: '-' };
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.lrn}</td><td>${stud.lastName}, ${stud.firstName}</td><td>${stud.section}</td><td>${r.date}</td><td>${r.timeIn || '-'}</td><td>${r.timeOut || '-'}</td><td>${r.totalHours || '0'} hrs</td>`;
-        tbody.appendChild(tr);
+        tbody.innerHTML += `<tr><td>${r.lrn}</td><td>${stud.lastName}, ${stud.firstName}</td><td>${stud.section}</td><td>${r.date}</td><td>${r.timeIn || '-'}</td><td>${r.timeOut || '-'}</td><td>${r.totalHours || '0'} hrs</td></tr>`;
       });
     }
 
@@ -477,23 +492,18 @@
       filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
 
       filtered.forEach((s, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section}</td><td>${s.sex || '-'}</td><td>${s.course}</td><td>${s.field}</td><td>${s.deploymentArea}</td>`;
-        tbody.appendChild(tr);
+        tbody.innerHTML += `<tr><td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section}</td><td>${s.sex || '-'}</td><td>${s.course}</td><td>${s.field}</td><td>${s.deploymentArea}</td></tr>`;
       });
     }
 
-    document.getElementById('masterlist-section').addEventListener('change', renderMasterlistPreview);
-
-    // ---- ACTIONS ----
     function generateMasterlistDocx() {
       const sec = document.getElementById('masterlist-section').value;
       let filtered = allStudents.filter(s => sec === 'All' || s.section === sec);
       filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
 
-      if (filtered.length === 0) { alert('Walang estudyante sa section na ito.'); return; }
+      if (filtered.length === 0) { alert('Walang estudyante.'); return; }
 
-      let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body { font-family: Arial, sans-serif; } table { width: 100%; border-collapse: collapse; font-size: 11px; } th, td { border: 1px solid black; padding: 5px; text-align: left; } th { background-color: #f2f2f2; font-weight: bold; } h2 { text-align: center; }</style></head><body><h2>WORK IMMERSION MASTERLIST</h2><p style="text-align:center;">Section: ${sec}</p><table><thead><tr><th>No.</th><th>Last Name</th><th>First Name</th><th>Middle Name</th><th>Section</th><th>Sex</th><th>Course</th><th>Field</th><th>Assigned Area</th></tr></thead><tbody>`;
+      let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body { font-family: Arial, sans-serif; } table { width: 100%; border-collapse: collapse; font-size: 11px; } th, td { border: 1px solid black; padding: 5px; text-align: left; } th { background-color: #f2f2f2; font-weight: bold; }</style></head><body><h2>WORK IMMERSION MASTERLIST</h2><p>Section: ${sec}</p><table><thead><tr><th>No.</th><th>Last Name</th><th>First Name</th><th>Middle Name</th><th>Section</th><th>Sex</th><th>Course</th><th>Field</th><th>Assigned Area</th></tr></thead><tbody>`;
 
       filtered.forEach((s, index) => {
         html += `<tr><td>${index + 1}</td><td>${s.lastName}</td><td>${s.firstName}</td><td>${s.middleName || ''}</td><td>${s.section || ''}</td><td>${s.sex || ''}</td><td>${s.course || ''}</td><td>${s.field || ''}</td><td>${s.deploymentArea || ''}</td></tr>`;
@@ -503,10 +513,7 @@
       const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `Masterlist_${sec === 'All' ? 'AllSections' : sec}.doc`;
-      a.click();
-      URL.revokeObjectURL(url);
+      a.href = url; a.download = `Masterlist_${sec === 'All' ? 'All' : sec}.doc`; a.click(); URL.revokeObjectURL(url);
     }
 
     async function normalizeNames() {
@@ -515,48 +522,20 @@
       if (res.success) { alert(res.message); loadDashboardData(); } else { alert(res.error); }
     }
 
-    async function submitScore() {
-      const lrn = document.getElementById('score-lrn').value.trim();
-      const dayNumber = document.getElementById('score-day').value;
-      const c1 = parseInt(document.getElementById('crit-1').value) || 0;
-      const c2 = parseInt(document.getElementById('crit-2').value) || 0;
-      const c3 = parseInt(document.getElementById('crit-3').value) || 0;
-      const c4 = parseInt(document.getElementById('crit-4').value) || 0;
-      const c5 = parseInt(document.getElementById('crit-5').value) || 0;
-      const total = c1 + c2 + c3 + c4 + c5;
-      
-      if (!lrn || !dayNumber) { alert('Please select a student and enter a Day Number.'); return; }
-
-      const res = await callAPI('saveScore', { lrn, dayNumber, score: total, criteria: { c1, c2, c3, c4, c5 } });
-      if (res.success) {
-        document.getElementById('score-msg').innerText = 'Score submitted successfully!';
-        setTimeout(() => document.getElementById('score-msg').innerText = '', 3000);
-      } else { alert(res.error); }
-    }
-
     async function postAnnouncement() {
       const text = document.getElementById('announce-text').value;
       const res = await callAPI('saveAnnouncement', { announcement: text });
-      if (res.success) {
-        document.getElementById('announce-success').innerText = 'Announcement posted!';
-        setTimeout(() => document.getElementById('announce-success').innerText = '', 3000);
-      }
+      if (res.success) { document.getElementById('announce-success').innerText = 'Posted!'; setTimeout(() => document.getElementById('announce-success').innerText = '', 3000); }
     }
 
     async function loadPendingTeachers() {
       const res = await callAPI('getPendingTeachers');
       const tbody = document.querySelector('#approvals-table tbody');
       tbody.innerHTML = '';
-      
       if (res.success && res.pending) {
-        if (res.pending.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No pending registrations.</td></tr>';
-          return;
-        }
+        if (res.pending.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No pending.</td></tr>'; return; }
         res.pending.forEach(t => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${t.email}</td><td>${t.role}</td><td><button class="btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="approveTeacher('${t.email}')">Approve</button> <button class="btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="rejectTeacher('${t.email}')">Reject</button></td>`;
-          tbody.appendChild(tr);
+          tbody.innerHTML += `<tr><td>${t.email}</td><td>${t.role}</td><td><button class="btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="approveTeacher('${t.email}')">Approve</button> <button class="btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="rejectTeacher('${t.email}')">Reject</button></td></tr>`;
         });
       }
     }
@@ -568,17 +547,14 @@
     }
 
     async function rejectTeacher(email) {
-      if(!confirm(`Reject and remove ${email}?`)) return;
+      if(!confirm(`Reject ${email}?`)) return;
       const res = await callAPI('rejectTeacher', { email });
       alert(res.message || res.error); loadPendingTeachers();
     }
 
     window.onload = () => {
       const saved = localStorage.getItem('wi_teacher');
-      if (saved) {
-        currentTeacher = JSON.parse(saved);
-        showTeacherDashboard();
-      }
+      if (saved) { currentTeacher = JSON.parse(saved); showTeacherDashboard(); }
     };
   </script>
 </body>
