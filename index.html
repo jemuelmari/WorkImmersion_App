@@ -1,1 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work Immersion Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
 
+  <div id="auth-screen" class="screen active">
+    <div class="glass-card auth-card">
+      <h1>Work Immersion</h1>
+      <p class="subtitle">All-in-One Portal</p>
+      <div class="tabs">
+        <button id="tab-login" class="tab active" onclick="switchAuthTab('login')">Login</button>
+        <button id="tab-signup" class="tab" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
+        <div class="input-group"><label>LRN</label><input type="text" id="login-lrn" placeholder="Enter your LRN" required></div>
+        <div class="input-group"><label>Password</label><input type="password" id="login-password" placeholder="Enter password" required></div>
+        <button type="submit" class="btn-primary">Log In</button>
+        <p style="text-align:center; margin-top: 10px; font-size:13px;">
+          <a href="#" onclick="showForgotPasswordModal()" style="color: var(--primary); text-decoration: none;">Forgot Password?</a>
+        </p>
+        <p id="login-error" class="error-msg"></p>
+      </form>
+      <form id="signup-form" class="auth-form" onsubmit="handleSignup(event)">
+        <div class="input-group"><label>LRN</label><input type="text" id="signup-lrn" placeholder="Enter your LRN" required></div>
+        <div class="row">
+          <div class="input-group"><label>Last Name</label><input type="text" id="signup-lastname" placeholder="Last Name" required></div>
+          <div class="input-group"><label>First Name</label><input type="text" id="signup-firstname" placeholder="First Name" required></div>
+        </div>
+        <div class="input-group"><label>Middle Name (Optional)</label><input type="text" id="signup-middlename" placeholder="Middle Name"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="signup-password" placeholder="Create a password" required></div>
+        
+        <!-- BAGONG SECURITY QUESTION -->
+        <div class="input-group">
+          <label>Security Question</label>
+          <select id="signup-security-question" required>
+            <option value="">Select a question</option>
+            <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+            <option value="What is the name of your first pet?">What is the name of your first pet?</option>
+            <option value="What is your favorite color?">What is your favorite color?</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Security Answer</label>
+          <input type="text" id="signup-security-answer" placeholder="Your answer" required>
+        </div>
+
+        <div class="row">
+          <div class="input-group">
+            <label>Sex</label>
+            <select id="signup-sex" required><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select>
+          </div>
+          <div class="input-group">
+            <label>Section</label>
+            <select id="signup-section" required><option value="">Select Section</option><option value="12 GAS">12 GAS</option><option value="12 HUMSS">12 HUMSS</option></select>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Field</label>
+          <select id="signup-field" onchange="updateCourses()" required>
+            <option value="">Select Field</option><option value="Health">Health / Medical</option><option value="Education">Education</option><option value="Agriculture">Agriculture</option><option value="Business">Business / Management</option><option value="Engineering/IT">Engineering / IT</option>
+          </select>
+        </div>
+        <div class="input-group"><label>Course</label><select id="signup-course" required><option value="">Select Field First</option></select></div>
+        <div class="input-group"><label>Deployment Area</label><select id="signup-area" required><option value="">Select Course First</option></select></div>
+        <div class="input-group" id="school-group" style="display: none;">
+          <label>School</label>
+          <select id="signup-school">
+            <option value="">Select School</option>
+            <option value="San Pedro Elementary School">San Pedro Elementary School</option>
+            <option value="Iba Elementary School">Iba Elementary School</option>
+            <option value="Iba High School">Iba High School</option>
+            <option value="Sula Elementary School">Sula Elementary School</option>
+            <option value="Sta. Cruz Elementary School">Sta. Cruz Elementary School</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">Create Account</button>
+        <p id="signup-error" class="error-msg"></p>
+      </form>
+      <div style="text-align: center; margin-top: 15px;">
+        <button class="btn-secondary" onclick="goToTeacher()" style="font-size: 12px; padding: 8px 16px;">Teacher Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD SCREEN -->
+  <div id="dashboard-screen" class="screen">
+    <div class="glass-card dashboard-card">
+      <div id="student-announcement" class="announcement-banner">
+        <strong>📢 Announcement:</strong> <span id="announcement-text"></span>
+      </div>
+      <div class="dashboard-header">
+        <h2>Welcome, <span id="student-name">Student</span>!</h2>
+        <div>
+          <button class="btn-secondary" onclick="showProfileModal()" style="padding: 8px 12px; font-size: 12px;">Edit Profile</button>
+          <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+      </div>
+      <div class="tabs dashboard-tabs">
+        <button class="tab active" onclick="switchDashTab('time')">Time & Attendance</button>
+        <button class="tab" onclick="switchDashTab('diary')">Daily Diary</button>
+        <button class="tab" onclick="switchDashTab('upload')">Requirements</button>
+      </div>
+      <div id="dash-time" class="dash-content active">
+        <h3>Log Your Attendance</h3>
+        <div class="timer-display" id="current-datetime">--:--:--</div>
+        <div class="button-row">
+          <button class="btn-success" onclick="startCamera('TimeIn')">Time In</button>
+          <button class="btn-danger" onclick="startCamera('TimeOut')">Time Out</button>
+        </div>
+        <div class="summary-box">
+          <h4>Your Total Hours</h4>
+          <p class="total-hours" id="total-hours">0.00 hrs</p>
+        </div>
+        <h4>Recent Logs</h4>
+        <ul id="attendance-list" class="log-list"></ul>
+      </div>
+      <div id="dash-diary" class="dash-content">
+        <h3>Daily Diary</h3>
+        <div class="input-group"><label>Day Number (1-10)</label><input type="number" id="diary-day" min="1" max="10" required></div>
+        <div class="input-group"><label>Entry Text</label><textarea id="diary-text" rows="4" placeholder="What did you do today?"></textarea></div>
+        <div class="input-group">
+          <label>Upload Pictures (Min 2)</label>
+          <input type="file" id="diary-images" accept="image/*" multiple onchange="previewDiaryImages(event)">
+          <div id="diary-preview" class="image-preview"></div>
+        </div>
+        <button class="btn-primary" onclick="saveDiary()">Save Diary Entry</button>
+        <button class="btn-secondary" onclick="generateWordDoc()">Download as Word</button>
+        <h4 style="margin-top: 20px;">My Diary Entries & Scores</h4>
+        <ul id="diary-list" class="log-list"></ul>
+      </div>
+      <div id="dash-upload" class="dash-content">
+        <h3>Upload Requirements</h3>
+        <p class="note">Strictly PDF format only.</p>
+        <div class="input-group"><input type="file" id="req-file" accept=".pdf" onchange="validatePDF(event)"></div>
+        <button class="btn-primary" onclick="uploadRequirement()">Upload PDF</button>
+        <ul id="requirements-list" class="log-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT PROFILE MODAL -->
+  <div id="profile-modal" class="modal">
+    <div class="glass-card modal-content" style="max-height: 90vh; overflow-y: auto; max-width: 500px;">
+      <h3>Edit Profile</h3>
+      <p style="font-size: 12px; color: gray; margin-bottom: 15px;">Update your personal details and supervisor.</p>
+      <div class="row">
+        <div class="input-group"><label>Last Name</label><input type="text" id="edit-lastname" required></div>
+        <div class="input-group"><label>First Name</label><input type="text" id="edit-firstname" required></div>
+      </div>
+      <div class="input-group"><label>Middle Name</label><input type="text" id="edit-middlename"></div>
+      <div class="row">
+        <div class="input-group"><label>Sex</label><select id="edit-sex" required><option value="Male">Male</option><option value="Female">Female</option></select></div>
+        <div class="input-group"><label>Section</label><select id="edit-section" required><option value="12 GAS">12 GAS</option><option value="12 HUMSS">12 HUMSS</option></select></div>
+      </div>
+      <div class="input-group">
+        <label>Field</label>
+        <select id="edit-field" onchange="updateEditCourses()" required>
+          <option value="Health">Health / Medical</option><option value="Education">Education</option><option value="Agriculture">Agriculture</option><option value="Business">Business / Management</option><option value="Engineering/IT">Engineering / IT</option>
+        </select>
+      </div>
+      <div class="input-group"><label>Course</label><select id="edit-course" onchange="updateEditAreas()" required></select></div>
+      <div class="input-group"><label>Deployment Area</label><select id="edit-area" onchange="toggleEditSchool()" required></select></div>
+      <div class="input-group" id="edit-school-group" style="display: none;">
+        <label>School</label>
+        <select id="edit-school">
+          <option value="">Select School</option>
+          <option value="San Pedro Elementary School">San Pedro Elementary School</option>
+          <option value="Iba Elementary School">Iba Elementary School</option>
+          <option value="Iba High School">Iba High School</option>
+          <option value="Sula Elementary School">Sula Elementary School</option>
+          <option value="Sta. Cruz Elementary School">Sta. Cruz Elementary School</option>
+        </select>
+      </div>
+      <div class="input-group"><label>Immediate Supervisor</label><input type="text" id="edit-supervisor" placeholder="Enter supervisor's full name"></div>
+      <div class="button-row" style="margin-top: 15px;">
+        <button class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMERA MODAL -->
+  <div id="camera-modal" class="modal">
+    <div class="glass-card modal-content" style="max-width: 400px; text-align: center;">
+      <h3 id="camera-title" style="margin-bottom: 10px;">Taking Picture...</h3>
+      <p style="font-size: 12px; color: gray; margin-bottom: 15px;">Please look at the camera.</p>
+      <div style="position: relative; width: 100%; height: 300px; background: black; border-radius: 12px; overflow: hidden;">
+        <video id="camera-preview" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <div id="countdown-display" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; font-weight: bold; color: white; text-shadow: 0 0 10px black; display: none;">3</div>
+      </div>
+      <p id="camera-status" style="font-size: 12px; color: var(--primary); margin-top: 10px; font-weight: bold;"></p>
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgot-password-modal" class="modal">
+    <div class="glass-card modal-content" style="max-width: 400px;">
+      <h3>Reset Password</h3>
+      <p style="font-size: 12px; color: gray; margin-bottom: 15px;">Enter your LRN and answer your security question.</p>
+      
+      <div class="input-group">
+        <label>LRN</label>
+        <input type="text" id="reset-lrn" placeholder="Enter your LRN" oninput="loadSecurityQuestion()">
+      </div>
+      
+      <div class="input-group" id="security-question-group" style="display: none;">
+        <label>Security Question</label>
+        <p id="reset-question" style="font-size: 14px; font-weight: bold; margin-bottom: 5px;"></p>
+        <input type="text" id="reset-answer" placeholder="Your answer">
+      </div>
+      
+      <div class="input-group" id="new-password-group" style="display: none;">
+        <label>New Password</label>
+        <input type="password" id="reset-new-password" placeholder="Enter new password">
+      </div>
+      
+      <div class="button-row" style="margin-top: 15px;">
+        <button class="btn-secondary" onclick="closeForgotPasswordModal()">Cancel</button>
+        <button class="btn-primary" onclick="resetPassword()">Reset Password</button>
+      </div>
+      <p id="reset-msg" class="success-msg"></p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js')); }
+  </script>
+</body>
+</html>
