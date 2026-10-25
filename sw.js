@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wi-cache-v1'; // <-- PALITAN ITO (v2, v3...) TUWING MAY BAGONG UPDATE
+const CACHE_NAME = 'wi-cache-v8'; // PALITAN ITO (v9, v10) TUWING MAY BAGONG UPDATE
 const urlsToCache = [
   '/',
   '/index.html',
