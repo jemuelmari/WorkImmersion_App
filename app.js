@@ -1,5 +1,5 @@
 // ============================================================
-// WORK IMMERSION APP (app.js) - Final
+// WORK IMMERSION APP (app.js) - Final with Auto-Update
 // ============================================================
 
 const API_URL = '/api/proxy';
@@ -123,46 +123,15 @@ function switchDashTab(tabName) {
 }
 
 // ============================================================
-// DYNAMIC DROPDOWNS (UPDATED WITH GEODETIC & FIXED AREAS)
+// DYNAMIC DROPDOWNS
 // ============================================================
 
 const courseData = {
-  'Health': { 
-    courses: ['Nursing', 'Medical Technology', 'Pharmacy'], 
-    areas: { 
-      'Nursing': ['RHU San Jose', 'Lying-In Clinic', 'LGU San Jose'], 
-      'Medical Technology': ['RHU San Jose', 'LGU San Jose'], 
-      'Pharmacy': ['LGU San Jose', 'SHEBA'] 
-    } 
-  },
-  'Education': { 
-    courses: ['BSEd', 'BEEd'], 
-    areas: { 
-      'BSEd': ['School', 'LGU San Jose'], 
-      'BEEd': ['School', 'LGU San Jose'] 
-    } 
-  },
-  'Agriculture': { 
-    courses: ['BS Agriculture'], 
-    areas: { 
-      'BS Agriculture': ['Department of Agriculture', 'LGU San Jose', 'SHEBA'] 
-    } 
-  },
-  'Business': { 
-    courses: ['Accountancy', 'Business Admin'], 
-    areas: { 
-      'Accountancy': ['LGU San Jose', 'Papay\'s Bakeshop'], 
-      'Business Admin': ['LGU San Jose', 'Papay\'s Bakeshop', 'SHEBA'] 
-    } 
-  },
-  'Engineering/IT': { 
-    courses: ['Civil Engineering', 'IT', 'Geodetic Engineering'], // IDINAGDAG ANG GEODETIC ENGINEERING
-    areas: { 
-      'Civil Engineering': ['LGU San Jose'], // Inalis ang SHEBA
-      'IT': ['LGU San Jose'], // Inalis ang SHEBA
-      'Geodetic Engineering': ['LGU San Jose'] // BAGONG DAGDAG
-    } 
-  }
+  'Health': { courses: ['Nursing', 'Medical Technology', 'Pharmacy'], areas: { 'Nursing': ['RHU San Jose', 'Lying-In Clinic', 'LGU San Jose'], 'Medical Technology': ['RHU San Jose', 'LGU San Jose'], 'Pharmacy': ['LGU San Jose', 'SHEBA'] } },
+  'Education': { courses: ['BSEd', 'BEEd'], areas: { 'BSEd': ['School', 'LGU San Jose'], 'BEEd': ['School', 'LGU San Jose'] } },
+  'Agriculture': { courses: ['BS Agriculture'], areas: { 'BS Agriculture': ['Department of Agriculture', 'LGU San Jose', 'SHEBA'] } },
+  'Business': { courses: ['Accountancy', 'Business Admin'], areas: { 'Accountancy': ['LGU San Jose', 'Papay\'s Bakeshop'], 'Business Admin': ['LGU San Jose', 'Papay\'s Bakeshop', 'SHEBA'] } },
+  'Engineering/IT': { courses: ['Civil Engineering', 'IT', 'Geodetic Engineering'], areas: { 'Civil Engineering': ['LGU San Jose'], 'IT': ['LGU San Jose'], 'Geodetic Engineering': ['LGU San Jose'] } }
 };
 
 function updateCourses() {
@@ -437,4 +406,22 @@ async function saveProfile() {
     alert('Profile updated successfully!');
     closeProfileModal();
   } else { alert(res.error); }
+}
+
+// ============================================================
+// AUTO-UPDATE SCRIPT FOR PWA
+// ============================================================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          // May bagong update! I-refresh ang page para makita agad.
+          console.log('New content is available; please refresh.');
+          window.location.reload(); 
+        }
+      });
+    });
+  });
 }
