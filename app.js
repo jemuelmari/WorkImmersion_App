@@ -1,5 +1,5 @@
 // ============================================================
-// WORK IMMERSION APP (app.js) - Final v10.0 (Camera Feature)
+// WORK IMMERSION APP (app.js) - Final v10.1 (Compressed Camera)
 // ============================================================
 
 const API_URL = '/api/proxy';
@@ -166,7 +166,7 @@ function updateAreas() {
 }
 
 // ============================================================
-// CAMERA LOGIC (TIME IN / OUT)
+// CAMERA LOGIC (WITH CANVAS COMPRESSION)
 // ============================================================
 
 function startCamera(type) {
@@ -215,14 +215,19 @@ function captureAndUpload() {
   const video = document.getElementById('camera-preview');
   const status = document.getElementById('camera-status');
   
+  // === COMPRESSION LOGIC ===
   const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  const MAX_WIDTH = 600; // Pinaliit natin from 800 to 600 para mas mabilis
+  const scale = MAX_WIDTH / video.videoWidth;
+  
+  canvas.width = MAX_WIDTH;
+  canvas.height = video.videoHeight * scale;
+  
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   
-  // Compress to JPEG (70% quality)
-  const base64Data = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+  // I-compress sa JPEG na may 60% quality (mga 30KB-50KB lang ito)
+  const base64Data = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
   status.innerText = 'Saving picture to Drive...';
 
   callAPI('uploadDTRPhoto', {
@@ -289,12 +294,16 @@ async function loadAttendance() {
   document.getElementById('total-hours').innerText = total.toFixed(2) + ' hrs';
 }
 
+// Diary Preview: Limit file size & Compress before saving to Base64 array
 function previewDiaryImages(e) {
   const files = Array.from(e.target.files);
   const preview = document.getElementById('diary-preview');
   preview.innerHTML = '';
   diaryImagesBase64 = [];
+  
   if (files.length < 2) { alert('Select at least 2 pictures.'); return; }
+  
+  let processedCount = 0;
   
   files.forEach(file => {
     const reader = new FileReader();
@@ -302,12 +311,24 @@ function previewDiaryImages(e) {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800;
-        canvas.width = MAX_WIDTH; canvas.height = img.height * (MAX_WIDTH / img.width);
-        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const MAX_WIDTH = 800; // Standard size for diary images
+        canvas.width = MAX_WIDTH; 
+        canvas.height = img.height * (MAX_WIDTH / img.width);
+        const ctx = canvas.getContext('2d'); 
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 70% quality compression
         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
         diaryImagesBase64.push(compressedDataUrl.split(',')[1]);
-        const previewImg = document.createElement('img'); previewImg.src = compressedDataUrl; preview.appendChild(previewImg);
+        
+        const previewImg = document.createElement('img'); 
+        previewImg.src = compressedDataUrl; 
+        preview.appendChild(previewImg);
+        
+        processedCount++;
+        if (processedCount === files.length) {
+          alert('Images compressed and ready to upload!');
+        }
       };
       img.src = evt.target.result;
     };
