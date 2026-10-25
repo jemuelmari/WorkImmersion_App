@@ -9,11 +9,10 @@
 </head>
 <body>
 
-  <!-- TEACHER AUTH SCREEN -->
   <div id="teacher-auth" class="screen active">
     <div class="glass-card auth-card">
       <h1>Teacher Portal</h1>
-      <p class="subtitle">Work Immersion System (v6.2)</p>
+      <p class="subtitle">Work Immersion System (v7.0)</p>
 
       <div class="tabs">
         <button id="tab-t-login" class="tab active" onclick="switchTeacherTab('login')">Login</button>
@@ -40,15 +39,13 @@
     </div>
   </div>
 
-  <!-- TEACHER DASHBOARD SCREEN -->
   <div id="teacher-dash" class="screen">
     <div class="glass-card dashboard-card" style="max-width: 1100px;">
       
-      <!-- HEADER -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div class="dashboard-header" style="margin-bottom: 0; flex: 1;">
           <div>
-            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v6.2)</span></h2>
+            <h2>Teacher Dashboard <span style="font-size:12px; color:var(--primary);">(v7.0)</span></h2>
             <p style="font-size: 12px; color: gray;" id="teacher-info">Logged in as: </p>
           </div>
         </div>
@@ -67,7 +64,6 @@
         </ul>
       </div>
 
-      <!-- STICKY TABS -->
       <div class="tabs dashboard-tabs" id="teacher-tabs-nav">
         <button class="tab active" onclick="switchTeachTab('attendance')">Attendance</button>
         <button class="tab" onclick="switchTeachTab('scores')">Grade Diary</button>
@@ -76,7 +72,6 @@
         <button class="tab" id="tab-approvals" onclick="switchTeachTab('approvals')" style="display: none; color: var(--danger); font-weight: bold;">Approvals</button>
       </div>
 
-      <!-- ATTENDANCE TAB -->
       <div id="teach-attendance" class="dash-content active">
         <div class="row-controls">
           <div class="input-group" style="flex: 2;">
@@ -104,7 +99,6 @@
         </div>
       </div>
 
-      <!-- SCORES TAB -->
       <div id="teach-scores" class="dash-content">
         <h3>Grade Student Diary (Max 20 Points)</h3>
         
@@ -149,7 +143,6 @@
         </div>
       </div>
 
-      <!-- ANNOUNCEMENT TAB -->
       <div id="teach-announce" class="dash-content">
         <h3>Post Announcement to All Students</h3>
         <div class="input-group"><textarea id="announce-text" rows="5" placeholder="Type your announcement here..."></textarea></div>
@@ -157,7 +150,6 @@
         <p id="announce-success" class="success-msg"></p>
       </div>
 
-      <!-- MASTERLIST TAB -->
       <div id="teach-masterlist" class="dash-content">
         <h3>Generate Masterlist (Word Document)</h3>
         <p class="note">Pumili ng Section para i-filter bago mag-generate.</p>
@@ -180,7 +172,6 @@
         </div>
       </div>
 
-      <!-- APPROVALS TAB -->
       <div id="teach-approvals" class="dash-content">
         <h3>Pending Teacher Registrations</h3>
         <div class="data-table-container">
@@ -348,7 +339,7 @@
         student.diaryEntries.sort((a,b) => a.dayNumber - b.dayNumber).forEach(entry => {
           const div = document.createElement('div');
           div.className = 'diary-entry-block';
-          let imgsHtml = entry.imageUrls.map(url => `<a href="${url}" target="_blank"><img src="${url}"></a>`).join('');
+          let imgsHtml = entry.imageUrls.map(url => `<a href="${url}" target="_blank"><img src="${url}" onerror="this.style.display='none'"></a>`).join('');
           let score = student.scores[entry.dayNumber] ? student.scores[entry.dayNumber] + '/20' : 'Not Graded';
           
           div.innerHTML = `
